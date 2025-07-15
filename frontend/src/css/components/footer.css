@@ -1,0 +1,20 @@
+
+footer {
+  margin-top: auto;
+}
+
+.custom-footer {
+  background: #4e93dc;
+  color: #ffffff;
+  padding: 20px 0;
+  margin-top: 20px;
+}
+
+.white-link {
+  color: white;
+  text-decoration: none;
+}
+
+.contact-icon {
+  margin-right: 8px;
+}

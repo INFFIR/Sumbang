@@ -1,0 +1,9 @@
+.navbar-nav {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.navbar-nav .nav-link {
+  padding-left: 20px;
+  padding-right: 20px;
+}

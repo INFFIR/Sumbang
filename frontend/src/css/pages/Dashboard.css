@@ -1,0 +1,75 @@
+.centered-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+}
+
+.table-container {
+  display: block;
+}
+
+.card-container {
+  display: none;
+}
+
+.dashboard-id {
+  width: 100;
+  white-space: nowrap;
+}
+
+.dashboard-detail {
+  width: 130px;
+  text-align: center;
+}
+
+.dashboard-nama {
+  width: 380px;
+}
+
+.dashboard-nohp {
+  width: 200px;
+}
+
+.dashboard-lokasi {
+  width: 500px;
+}
+
+@media (max-width: 767px) {
+  .table-container {
+    display: none;
+  }
+
+  .card-container {
+    display: block;
+  }
+}
+
+.card {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  padding: 15px;
+}
+
+.card-text {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.card-label {
+  font-weight: bold;
+  min-width: 100px;
+  display: inline-block;
+}
+
+.card-value {
+  display: inline-block;
+}
+
+.card-link {
+  text-decoration: none;
+  color: #007bff;
+}

@@ -1,0 +1,27 @@
+.table-custom {
+  width: 100%;
+}
+
+.table-custom td {
+  word-wrap: break-word;
+}
+
+.table-custom th, .table-custom td {
+  padding: 10px;
+  text-align: left;
+}
+
+.table-custom .col-nama {
+  width: 200px;
+}
+
+
+.image-container img{
+    border-radius: 8px;
+}
+
+@media (max-width: 767.98px) {
+  .image-container {
+    margin-top: 1rem;
+  }
+}
