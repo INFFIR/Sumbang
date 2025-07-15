@@ -4,39 +4,64 @@ import "../css/components/footer.css";
 
 const Footer = () => {
   return (
-    <footer className="custom-footer text-white py-4">
+    <footer className="custom-footer text-white py-5">
       <Container>
-        <Row>
-          <Col md={6} className="text-center">
-            <h4>About Us</h4>
-            <p>sarana prasarana untuk masyarakat batu gampang.</p>
-          </Col>
-          <Col md={6} className="text-center">
-            <h4>Contact</h4>
-            <p>
-              <i className="bi bi-envelope contact-icon"></i>
-              Email:{" "}
-              <a href="mailto:lalin.dishubkwb@gmail.com" className="white-link">
-                lalin.dishubkwb@gmail.com
+        <Row className="justify-content-center">
+          <Col md={8} className="text-center">
+            {/* Logo Section */}
+            <div className="footer-logo mb-4">
+              <div className="logo-circle">
+                <i className="bi bi-circle"></i>
+              </div>
+              <h5 className="mt-2 mb-0">Dinas Perhubungan Kota Batu</h5>
+            </div>
+
+            {/* Social Media Icons */}
+            <div className="social-media mb-4">
+              <a href="#" className="social-icon me-3" aria-label="Facebook">
+                <i className="bi bi-facebook"></i>
               </a>
-            </p>
-            <p>
-              <i className="bi bi-instagram contact-icon"></i>
-              Instagram:{" "}
-              <a
-                href="https://www.instagram.com/dishubkotabatu?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
-                target="_blank"
-                rel="noopener noreferrer"
-                className="white-link"
-              >
-                @dishubkotabatu
+              <a href="#" className="social-icon me-3" aria-label="Twitter">
+                <i className="bi bi-twitter"></i>
               </a>
-            </p>
-          </Col>
-        </Row>
-        <Row>
-          <Col className="text-center mt-0">
-            <p>&copy; 2024 Dinas Perhubungan Kota Batu.</p>
+              <a href="#" className="social-icon me-3" aria-label="LinkedIn">
+                <i className="bi bi-linkedin"></i>
+              </a>
+              <a href="https://www.instagram.com/dishubkotabatu" className="social-icon" aria-label="Instagram">
+                <i className="bi bi-instagram"></i>
+              </a>
+            </div>
+
+            {/* Contact Info */}
+            <div className="contact-info mb-4">
+              <h6 className="mb-3">Hubungi Kami</h6>
+              <div className="contact-details">
+                <p className="mb-2">
+                  <span className="contact-label">Instagram:</span>
+                  <a
+                    href="https://www.instagram.com/dishubkotabatu"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="contact-link"
+                  >
+                    @dishubkotabatu
+                  </a>
+                  <span className="contact-separator">|</span>
+                  <span className="contact-label">Email:</span>
+                  <a
+                    href="mailto:lalin.dishubkwb@gmail.com"
+                    className="contact-link"
+                  >
+                    lalin.dishubkwb@gmail.com
+                  </a>
+                </p>
+              </div>
+            </div>
+
+            {/* Mission Statement */}
+            <div className="mission-statement">
+              <p className="mb-0">sarana prasarana untuk masyarakat batu gampang.</p>
+            </div>
           </Col>
         </Row>
       </Container>
