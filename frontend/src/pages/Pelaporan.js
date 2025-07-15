@@ -92,17 +92,18 @@ const Pelaporan = () => {
       <MainNavbar />
       <Container className="mt-5">
         <div className="text-center mb-4">
-          <h2>Form Pelaporan SUMBANG</h2>
+          <h2 className="fw-bold">Formulir Pelaporan Sumbang</h2>
+          <p className="text-muted">Sarana Prasarana Untuk Masyarakat Batu Gampang</p>
         </div>
         <Form noValidate validated={validated} onSubmit={handleSubmit}>
           <Row>
             <Col md={6}>
               <Form.Group controlId="formNama">
-                <Form.Label>Nama</Form.Label>
+                <Form.Label>Nama Lengkap</Form.Label>
                 <Form.Control
                   required
                   type="text"
-                  placeholder="Masukkan nama"
+                  placeholder="Masukkan nama lengkap"
                   value={form.nama}
                   onChange={(e) => setForm({ ...form, nama: e.target.value })}
                 />
@@ -136,7 +137,7 @@ const Pelaporan = () => {
                 <Form.Control
                   required
                   type="number"
-                  placeholder="Masukkan nomor HP"
+                  placeholder="Masukkan nomor HP (contoh 08xx...)"
                   min="0"
                   step="1"
                   value={form.noHp}
@@ -206,7 +207,7 @@ const Pelaporan = () => {
             <Form.Control
               required
               type="text"
-              placeholder="Masukkan lokasi"
+              placeholder="Masukkan alamat lokasi"
               value={form.lokasi}
               onChange={(e) => setForm({ ...form, lokasi: e.target.value })}
             />
@@ -243,7 +244,7 @@ const Pelaporan = () => {
           </Form.Group>
 
           <Button variant="primary" type="submit" className="mt-3">
-            Submit
+            Kirim Laporan
           </Button>
         </Form>
       </Container>

@@ -21,6 +21,13 @@ html, body {
   width: 100%;
 }
 
+.table-header-custom {
+  background-color: #D1D5DB;  /* Abu-abu terang */
+  color: #111827;             /* Teks hitam gelap */
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
 .table td, .table th {
   word-wrap: break-word;
   overflow-wrap: break-word;

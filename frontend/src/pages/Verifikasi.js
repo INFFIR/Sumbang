@@ -81,7 +81,8 @@ const getStatusClass = (status) => {
       <MainNavbar />
       <Container className="mt-5">
         <div className="text-center mb-4">
-          <h2>Status Pelaporan SUMBANG</h2>
+          <h2 className="fw-bold">Status Pelaporan Sumbang</h2>
+          <p className="text-muted">Sarana Prasarana Untuk Masyarakat Batu Gampang</p>
         </div>
         <div className="mb-4 d-flex justify-content-center">
           <Form.Group controlId="search" className="w-100 w-md-40">
@@ -102,7 +103,7 @@ const getStatusClass = (status) => {
                 <th className="col-nama">Nama</th>
                 <th className="col-permintaan">Permintaan</th>
                 <th className="col-lokasi">Lokasi</th>
-                <th className="col-date">Date</th>
+                <th className="col-date">Tanggal</th>
                 <th className="col-status">Status</th>
               </tr>
             </thead>
