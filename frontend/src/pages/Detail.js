@@ -13,6 +13,7 @@ const Detail = () => {
   const [showOnHoldModal, setShowOnHoldModal] = useState(false);
   const [showOnProcessModal, setShowOnProcessModal] = useState(false);
   const [showDoneModal, setShowDoneModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // ➕
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   const token = localStorage.getItem("token");
@@ -96,6 +97,7 @@ const Detail = () => {
     setShowOnHoldModal(false);
     setShowOnProcessModal(false);
     setShowDoneModal(false);
+    setShowDeleteModal(false); // ➕
   };
 
   const handleAction = async () => {
@@ -194,9 +196,35 @@ const Detail = () => {
     }
   };
 
+  const handleDelete = () => {
+    setShowDeleteModal(true); // ➕
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/delete/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      handleClose();
+      window.location.href = "/dashboard"; // ➕ alihkan setelah delete
+    } catch (error) {
+      console.error("Error deleting data:", error);
+    }
+  };
+
   const renderButtons = () => {
-    if (status === "Rejected") {
-      return null;
+    if (status === "Rejected" || status === "Done" || status === "Deleted") {
+      return (
+        <Button variant="outline-danger" onClick={handleDelete} className="ms-2">
+          Delete
+        </Button>
+      );
     }
 
     if (status === "Approved") {
@@ -208,27 +236,37 @@ const Detail = () => {
           <Button variant="info" onClick={handleOnProcess}>
             On Process
           </Button>
+          <Button variant="outline-danger" onClick={handleDelete} className="ms-2">
+            Delete
+          </Button>
         </>
       );
     }
 
     if (status === "On Process") {
       return (
-        <Button variant="success" onClick={handleDone}>
-          Done
-        </Button>
-      );
-    }
-    if (status === "On Hold") {
-      return (
-        <Button variant="info" onClick={handleOnProcess}>
-          On Process
-        </Button>
+        <>
+          <Button variant="success" onClick={handleDone}>
+            Done
+          </Button>
+          <Button variant="outline-danger" onClick={handleDelete} className="ms-2">
+            Delete
+          </Button>
+        </>
       );
     }
 
-    if (status === "Done") {
-      return null;
+    if (status === "On Hold") {
+      return (
+        <>
+          <Button variant="info" onClick={handleOnProcess}>
+            On Process
+          </Button>
+          <Button variant="outline-danger" onClick={handleDelete} className="ms-2">
+            Delete
+          </Button>
+        </>
+      );
     }
 
     return (
@@ -238,6 +276,9 @@ const Detail = () => {
         </Button>
         <Button variant="success" onClick={handleApprove}>
           Approved
+        </Button>
+        <Button variant="outline-danger" onClick={handleDelete} className="ms-2">
+          Delete
         </Button>
       </>
     );
@@ -252,62 +293,29 @@ const Detail = () => {
           <Col md={8}>
             <Table striped bordered hover className="table-custom">
               <tbody>
+                <tr><td>Nama</td><td>{nama}</td></tr>
+                <tr><td>Alamat</td><td>{alamat}</td></tr>
+                <tr><td>No HP</td><td>{no_hp}</td></tr>
                 <tr>
-                  <td className="col-nama">Nama</td>
-                  <td>{nama}</td>
-                </tr>
-                <tr>
-                  <td className="col-alamat">Alamat</td>
-                  <td>{alamat}</td>
-                </tr>
-                <tr>
-                  <td className="col-no-hp">No HP</td>
-                  <td>{no_hp}</td>
-                </tr>
-                <tr>
-                  <td className="col-no-whatsapp">No Whatsapp</td>
+                  <td>No Whatsapp</td>
                   <td>
-                    <a
-                      href={no_whatsapp}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Go To Whatsapp
-                    </a>
+                    <a href={no_whatsapp} target="_blank" rel="noopener noreferrer">Go To Whatsapp</a>
                   </td>
                 </tr>
+                <tr><td>Permintaan</td><td>{permintaan}</td></tr>
+                <tr><td>Detail Permintaan</td><td>{detail_permintaan}</td></tr>
+                <tr><td>Lokasi</td><td>{lokasi}</td></tr>
                 <tr>
-                  <td className="col-permintaan">Permintaan</td>
-                  <td>{permintaan}</td>
-                </tr>
-                <tr>
-                  <td className="col-detail-permintaan">Detail Permintaan</td>
-                  <td>{detail_permintaan}</td>
-                </tr>
-                <tr>
-                  <td className="col-lokasi">Lokasi</td>
-                  <td>{lokasi}</td>
-                </tr>
-                <tr>
-                  <td className="col-surat-pengajuan">Surat Pengajuan</td>
+                  <td>Surat Pengajuan</td>
                   <td>
                     {surat ? (
-                      <a
-                        href={getPdfUrl(surat)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <a href={getPdfUrl(surat)} target="_blank" rel="noopener noreferrer">
                         Lihat Dokumen
                       </a>
-                    ) : (
-                      "No document available"
-                    )}
+                    ) : "No document available"}
                   </td>
                 </tr>
-                <tr>
-                  <td className="col-status">Status</td>
-                  <td>{status}</td>
-                </tr>
+                <tr><td>Status</td><td>{status}</td></tr>
               </tbody>
             </Table>
 
@@ -315,22 +323,17 @@ const Detail = () => {
               {renderButtons()}
             </div>
           </Col>
-          <Col
-            md={4}
-            className="d-flex justify-content-center align-items-center"
-          >
+          <Col md={4} className="d-flex justify-content-center align-items-center">
             {foto ? (
-              <div className="image-container">
-                <img
-                  src={getImageUrl(foto)}
-                  alt="Detail"
-                  style={{
-                    maxWidth: "100%",
-                    height: "auto",
-                    border: "5px solid #272a2f",
-                  }}
-                />
-              </div>
+              <img
+                src={getImageUrl(foto)}
+                alt="Detail"
+                style={{
+                  maxWidth: "100%",
+                  height: "auto",
+                  border: "5px solid #272a2f",
+                }}
+              />
             ) : (
               <p>No image available</p>
             )}
@@ -338,7 +341,7 @@ const Detail = () => {
         </Row>
       </Container>
 
-      {/* Modal for Approve/Reject */}
+      {/* Modal Approve/Reject */}
       <Modal show={showModal} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -346,73 +349,61 @@ const Detail = () => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Are you sure you want to{" "}
-          {modalType === "Approve" ? "Approve" : "Reject"} this request?
+          Are you sure you want to {modalType === "Approve" ? "Approve" : "Reject"} this request?
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button
-            variant={modalType === "Approve" ? "success" : "danger"}
-            onClick={handleAction}
-          >
+          <Button variant="secondary" onClick={handleClose}>Cancel</Button>
+          <Button variant={modalType === "Approve" ? "success" : "danger"} onClick={handleAction}>
             {modalType === "Approve" ? "Approve" : "Reject"}
           </Button>
         </Modal.Footer>
       </Modal>
 
-      {/* Modal for On Hold */}
+      {/* Modal On Hold */}
       <Modal show={showOnHoldModal} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>On Hold Confirmation</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to put this request on hold?
-        </Modal.Body>
+        <Modal.Body>Are you sure you want to put this request on hold?</Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button variant="warning" onClick={handleOnHoldConfirm}>
-            Confirm
-          </Button>
+          <Button variant="secondary" onClick={handleClose}>Cancel</Button>
+          <Button variant="warning" onClick={handleOnHoldConfirm}>Confirm</Button>
         </Modal.Footer>
       </Modal>
 
-      {/* Modal for On Process */}
+      {/* Modal On Process */}
       <Modal show={showOnProcessModal} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>On Process Confirmation</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to mark this request as being processed?
-        </Modal.Body>
+        <Modal.Body>Are you sure you want to mark this request as being processed?</Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button variant="info" onClick={handleOnProcessConfirm}>
-            Confirm
-          </Button>
+          <Button variant="secondary" onClick={handleClose}>Cancel</Button>
+          <Button variant="info" onClick={handleOnProcessConfirm}>Confirm</Button>
         </Modal.Footer>
       </Modal>
 
-      {/* Modal for Done */}
+      {/* Modal Done */}
       <Modal show={showDoneModal} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>Done Confirmation</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to mark this request as done?
-        </Modal.Body>
+        <Modal.Body>Are you sure you want to mark this request as done?</Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button variant="success" onClick={handleDoneConfirm}>
-            Confirm
-          </Button>
+          <Button variant="secondary" onClick={handleClose}>Cancel</Button>
+          <Button variant="success" onClick={handleDoneConfirm}>Confirm</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal Delete ➕ */}
+      <Modal show={showDeleteModal} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Confirmation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to delete this request? This action cannot be undone.</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>Cancel</Button>
+          <Button variant="danger" onClick={handleDeleteConfirm}>Confirm Delete</Button>
         </Modal.Footer>
       </Modal>
     </>

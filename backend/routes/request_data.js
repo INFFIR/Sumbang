@@ -9,7 +9,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.get("/data", authenticateToken, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, nama, no_hp, lokasi FROM request_data"
+      "SELECT id, nama, no_hp, lokasi FROM request_data WHERE status != 'Deleted'"
     );
     res.json(rows);
   } catch (error) {

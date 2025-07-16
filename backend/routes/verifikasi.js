@@ -6,7 +6,7 @@ const router = express.Router();
 router.get("/verifikasi/data", async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, nama, permintaan, lokasi, status, date FROM request_data"
+      "SELECT id, nama, permintaan, lokasi, status, date FROM request_data WHERE status != 'Deleted'"
     );
     res.json(rows);
   } catch (error) {

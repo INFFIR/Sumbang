@@ -5,17 +5,20 @@ const authenticateToken = require("../src/authMiddleware");
 
 const router = express.Router();
 
+// GET Detail
 router.get("/detail/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
 
   try {
     const [rows] = await pool.query(
-      "SELECT nama, alamat, no_hp, no_whatsapp, permintaan, detail_permintaan, lokasi, surat, status, foto FROM request_data WHERE id = ?",
+      `SELECT nama, alamat, no_hp, no_whatsapp, permintaan, detail_permintaan, lokasi, surat, status, foto 
+       FROM request_data 
+       WHERE id = ? AND status != 'Deleted'`, // filter agar data 'Deleted' tidak muncul
       [id]
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ error: "Request not found" });
+      return res.status(404).json({ error: "Request not found or has been deleted" });
     }
 
     const requestData = rows[0];
@@ -45,6 +48,7 @@ router.get("/detail/:id", authenticateToken, async (req, res) => {
   }
 });
 
+// POST Update Status
 router.post("/update-status/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -58,6 +62,28 @@ router.post("/update-status/:id", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Error updating status:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// POST Soft Delete
+router.post("/delete/:id", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const timestamp = moment().tz("Asia/Jakarta").format("HH:mm, DD MMMM YYYY");
+
+  try {
+    const [result] = await pool.query(
+      "UPDATE request_data SET status = ?, date = ? WHERE id = ?",
+      ["Deleted", timestamp, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Data tidak ditemukan atau sudah dihapus" });
+    }
+
+    res.status(200).json({ message: "Data berhasil dihapus (soft delete)" });
+  } catch (error) {
+    console.error("Error saat soft delete:", error);
+    res.status(500).json({ error: "Terjadi kesalahan pada server" });
   }
 });
 
