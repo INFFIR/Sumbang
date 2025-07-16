@@ -1,12 +1,16 @@
+/* Table */
 .table-custom {
   width: 100%;
+  border-collapse: collapse;
 }
 
 .table-custom td {
   word-wrap: break-word;
+  vertical-align: middle;
 }
 
-.table-custom th, .table-custom td {
+.table-custom th,
+.table-custom td {
   padding: 10px;
   text-align: left;
 }
@@ -15,9 +19,75 @@
   width: 200px;
 }
 
+.table-custom tbody tr:nth-child(even) {
+  background-color: #f8f9fa; /* Bootstrap light gray */
+}
 
-.image-container img{
-    border-radius: 8px;
+.table-custom tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+/* Image Styling */
+.image-container {
+  border: 3px solid #ccc;
+  border-radius: 12px;
+  padding: 10px;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-container img {
+  border-radius: 8px;
+  max-width: 100%;
+  max-height: 350px;
+  object-fit: contain;
+  font-size: 16px; /* default nyaman */
+}
+
+.custom-image {
+  max-width: 100%;
+  max-height: 350px;
+  border-radius: 8px;
+}
+
+.no-image {
+  font-size: 36px;
+  color: #999;
+  text-align: center;
+}
+
+/* Disabled Input Style */
+.form-control[disabled] {
+  background-color: #e5e7eb !important;
+  color: #111827;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+textarea.form-control[disabled] {
+  resize: none;
+}
+
+/* Custom field box look */
+.custom-field {
+  background-color: #e5e7eb;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.custom-field.textarea {
+  min-height: 100px;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .image-container img {
+    font-size: 18px;
+  }
 }
 
 @media (max-width: 767.98px) {
