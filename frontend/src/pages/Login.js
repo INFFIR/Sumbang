@@ -53,7 +53,7 @@ const Login = () => {
       <Container className="mt-5">
         <Row className="justify-content-center">
           <Col md={4}>
-            <h2 className="text-center mb-4 fw-bold">Login</h2>
+            <h2 className="text-center mb-4 fw-bold">Login Admin</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form noValidate validated={validated} onSubmit={handleSubmit}>
               <Form.Group controlId="formUsername">

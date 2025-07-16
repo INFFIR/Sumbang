@@ -5,9 +5,10 @@ import logo from "../images/Logo-dishub.png"; // impor logo
 
 const MainNavbar = () => {
   return (
-    <Navbar expand="lg" style={{ backgroundColor: "#4e93dc" }}>
+    <Navbar bg="light" variant="light" expand="lg" className="shadow-sm">
       <Container>
-        <Navbar.Brand as={Link} to="/" style={{ color: "white", display: "flex", alignItems: "center", gap: "10px" }}>
+        {/* Bagian logo tidak diubah sesuai instruksi, hanya warna teks disesuaikan */}
+        <Navbar.Brand as={Link} to="/" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <img
             src={logo}
             alt="Logo Dishub"
@@ -15,22 +16,30 @@ const MainNavbar = () => {
             height="45"
             className="d-inline-block align-top"
           />
-          Dinas Perhubungan Kota Batu
+          {/* Menggunakan style inline untuk memastikan warna teks hitam */}
+          <span style={{ color: "black" }}>Dinas Perhubungan Kota Batu</span>
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
+          {/* ms-auto akan mendorong menu ke sisi kanan */}
           <Nav className="ms-auto">
-            <Nav.Link as={Link} to="/" style={{ color: "white" }}>
+            {/* Mengubah item menu dan warnanya agar sesuai dengan gambar */}
+            <Nav.Link as={Link} to="/" style={{ color: "black" }}>
               Home
             </Nav.Link>
-            <Nav.Link as={Link} to="/pelaporan" style={{ color: "white" }}>
+            <Nav.Link as={Link} to="/pelaporan" style={{ color: "black" }}>
               Lapor
             </Nav.Link>
-            <Nav.Link as={Link} to="/verifikasi" style={{ color: "white" }}>
-              Status
+            {/* Mengganti "Status" menjadi "Aktivitas" dan link ke /verifikasi */}
+            <Nav.Link as={Link} to="/verifikasi" style={{ color: "black" }}>
+              Aktivitas
             </Nav.Link>
-            <Nav.Link as={Link} to="/login" style={{ color: "white" }}>
+            {/* Menambahkan menu "About Us" */}
+            <Nav.Link as={Link} to="/about" style={{ color: "black" }}>
+              About Us
+            </Nav.Link>
+            <Nav.Link as={Link} to="/login" style={{ color: "black" }}>
               Login
             </Nav.Link>
           </Nav>
