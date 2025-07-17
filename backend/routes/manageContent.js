@@ -7,6 +7,28 @@ const multer = require("multer");
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
+// // --- GET All Content ---
+// router.get("/manage/content", authenticateToken, async (req, res) => {
+//   try {
+//     const [rows] = await pool.query("SELECT id, title, description, TO_BASE64(media) as media FROM content");
+//     res.json(rows);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
+// // --- GET All Services ---
+// router.get("/manage/service", authenticateToken, async (req, res) => {
+//   try {
+//     const [rows] = await pool.query("SELECT id, title, description FROM service");
+//     res.json(rows);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
 // --- GET All Content (Public) ---
 router.get("/manage/content", async (req, res) => {
   try {

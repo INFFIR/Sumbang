@@ -13,19 +13,20 @@ const LandingPage = () => {
 
   const fetchData = async () => {
     try {
-      // const token = localStorage.getItem("token");
-      // const [contentRes, serviceRes] = await Promise.all([
-      //   axios.get(`${process.env.REACT_APP_API_URL}/api/manage/content`, {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   }),
-      //   axios.get(`${process.env.REACT_APP_API_URL}/api/manage/service`, {
-      //     headers: { Authorization: `Bearer ${token}` },
-      //   }),
-      // ]
+      const token = localStorage.getItem("token");
       const [contentRes, serviceRes] = await Promise.all([
-      axios.get(`${process.env.REACT_APP_API_URL}/api/manage/content`),
-      axios.get(`${process.env.REACT_APP_API_URL}/api/manage/service`),
-      ]);
+        axios.get(`${process.env.REACT_APP_API_URL}/api/manage/content`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(`${process.env.REACT_APP_API_URL}/api/manage/service`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]
+      // const [contentRes, serviceRes] = await Promise.all([
+      // axios.get(`${process.env.REACT_APP_API_URL}/api/manage/content`),
+      // axios.get(`${process.env.REACT_APP_API_URL}/api/manage/service`),
+      // ]
+      );
       setContentList(contentRes.data);
       setServiceList(serviceRes.data);
     } catch (err) {
