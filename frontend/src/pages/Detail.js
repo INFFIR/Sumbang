@@ -8,9 +8,13 @@ import "../css/pages/Detail.css";
 const Detail = () => {
   const { id } = useParams();
   const [data, setData] = useState(null);
-  const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("");
+  const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showOnHoldModal, setShowOnHoldModal] = useState(false);
+  const [showOnProcessModal, setShowOnProcessModal] = useState(false);
+  const [showDoneModal, setShowDoneModal] = useState(false);
+
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -18,13 +22,9 @@ const Detail = () => {
 
     axios
       .get(`${process.env.REACT_APP_API_URL}/api/detail/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
-      .then((response) => {
-        setData(response.data);
-      })
+      .then((res) => setData(res.data))
       .catch((err) => console.error(err));
   }, [id, token]);
 
@@ -42,17 +42,17 @@ const Detail = () => {
     return base64 ? `data:image/jpeg;base64,${base64}` : null;
   };
 
-  const handleAction = async (status) => {
+  const handleUpdateStatus = async (statusValue) => {
     try {
       await axios.post(
         `${process.env.REACT_APP_API_URL}/api/update-status/${id}`,
-        { status },
+        { status: statusValue },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setData((prev) => ({ ...prev, status }));
+      setData((prev) => ({ ...prev, status: statusValue }));
       handleClose();
     } catch (err) {
-      console.error(err);
+      console.error("Error updating status:", err);
     }
   };
 
@@ -73,6 +73,9 @@ const Detail = () => {
   const handleClose = () => {
     setShowModal(false);
     setShowDeleteModal(false);
+    setShowOnHoldModal(false);
+    setShowOnProcessModal(false);
+    setShowDoneModal(false);
   };
 
   if (!data) return <div className="text-center mt-5">Loading...</div>;
@@ -109,7 +112,12 @@ const Detail = () => {
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Detail Permintaan</Form.Label>
-              <Form.Control as="textarea" value={data.detail_permintaan} disabled rows={3} />
+              <Form.Control
+                as="textarea"
+                value={data.detail_permintaan}
+                disabled
+                rows={3}
+              />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Lokasi</Form.Label>
@@ -125,6 +133,10 @@ const Detail = () => {
                 Download Surat Pengajuan
               </a>
             </div>
+            <Form.Group className="mb-3">
+              <Form.Label>Status</Form.Label>
+              <Form.Control value={data.status} disabled />
+            </Form.Group>
           </Col>
 
           <Col md={4} className="d-flex align-items-start justify-content-center">
@@ -143,36 +155,116 @@ const Detail = () => {
           </Col>
         </Row>
 
+        {/* TOMBOL AKSI */}
         <div className="d-flex justify-content-start gap-2 mt-4">
           <Button variant="warning" onClick={() => setShowDeleteModal(true)}>
             Hapus Data
           </Button>
-          <Button variant="danger" onClick={() => { setModalType("Rejected"); setShowModal(true); }}>
-            Rejected
-          </Button>
-          <Button variant="success" onClick={() => { setModalType("Approved"); setShowModal(true); }}>
-            Approved
-          </Button>
+
+          {data.status === "Approved" && (
+            <>
+              <Button variant="secondary" onClick={() => setShowOnHoldModal(true)}>
+                On Hold
+              </Button>
+              <Button variant="info" onClick={() => setShowOnProcessModal(true)}>
+                On Process
+              </Button>
+            </>
+          )}
+
+          {data.status === "On Process" && (
+            <Button variant="success" onClick={() => setShowDoneModal(true)}>
+              Done
+            </Button>
+          )}
+
+          {data.status === "On Hold" && (
+            <Button variant="info" onClick={() => setShowOnProcessModal(true)}>
+              On Process
+            </Button>
+          )}
+
+          {["Rejected", "Approved", "On Process", "On Hold", "Done"].includes(data.status) === false && (
+            <>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  setModalType("Rejected");
+                  setShowModal(true);
+                }}
+              >
+                Rejected
+              </Button>
+              <Button
+                variant="success"
+                onClick={() => {
+                  setModalType("Approved");
+                  setShowModal(true);
+                }}
+              >
+                Approved
+              </Button>
+            </>
+          )}
         </div>
       </Container>
 
-      {/* Modal Konfirmasi Status */}
+      {/* Modal Approve/Reject */}
       <Modal show={showModal} onHide={handleClose} centered>
         <Modal.Body className="text-center">
-          <p>Apakah anda yakin untuk mengubah status menjadi <strong>{modalType}</strong>?</p>
-          <Button variant="secondary" onClick={handleClose} className="me-2">Batal</Button>
-          <Button variant={modalType === "Approved" ? "success" : "danger"} onClick={() => handleAction(modalType)}>
+          <p>
+            Apakah anda yakin ingin mengubah status menjadi{" "}
+            <strong>{modalType}</strong>?
+          </p>
+          <Button variant="secondary" onClick={handleClose} className="me-2">
+            Batal
+          </Button>
+          <Button
+            variant={modalType === "Approved" ? "success" : "danger"}
+            onClick={() => handleUpdateStatus(modalType)}
+          >
             OK
           </Button>
         </Modal.Body>
       </Modal>
 
-      {/* Modal Konfirmasi Hapus */}
+      {/* Modal Delete */}
       <Modal show={showDeleteModal} onHide={handleClose} centered>
         <Modal.Body className="text-center">
-          <p>Apakah anda yakin untuk menghapus data ini?</p>
+          <p>Apakah anda yakin ingin menghapus data ini?</p>
+          <Button variant="secondary" onClick={handleClose} className="me-2">
+            Batal
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            OK
+          </Button>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal On Hold */}
+      <Modal show={showOnHoldModal} onHide={handleClose} centered>
+        <Modal.Body className="text-center">
+          <p>Apakah anda yakin ingin menandai laporan ini sebagai <strong>On Hold</strong>?</p>
           <Button variant="secondary" onClick={handleClose} className="me-2">Batal</Button>
-          <Button variant="danger" onClick={handleDelete}>OK</Button>
+          <Button variant="secondary" onClick={() => handleUpdateStatus("On Hold")}>OK</Button>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal On Process */}
+      <Modal show={showOnProcessModal} onHide={handleClose} centered>
+        <Modal.Body className="text-center">
+          <p>Apakah anda yakin ingin menandai laporan ini sebagai <strong>On Process</strong>?</p>
+          <Button variant="secondary" onClick={handleClose} className="me-2">Batal</Button>
+          <Button variant="info" onClick={() => handleUpdateStatus("On Process")}>OK</Button>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal Done */}
+      <Modal show={showDoneModal} onHide={handleClose} centered>
+        <Modal.Body className="text-center">
+          <p>Apakah anda yakin ingin menandai laporan ini sebagai <strong>Done</strong>?</p>
+          <Button variant="secondary" onClick={handleClose} className="me-2">Batal</Button>
+          <Button variant="success" onClick={() => handleUpdateStatus("Done")}>OK</Button>
         </Modal.Body>
       </Modal>
     </>

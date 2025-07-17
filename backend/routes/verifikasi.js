@@ -3,6 +3,7 @@ const pool = require("../src/db");
 
 const router = express.Router();
 
+// GET All Data (excluding Deleted)
 router.get("/verifikasi/data", async (req, res) => {
   try {
     const [rows] = await pool.query(
