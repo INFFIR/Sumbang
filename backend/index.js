@@ -7,6 +7,7 @@ const authRoutes = require("./routes/auth");
 const requestDataRoutes = require("./routes/request_data");
 const verifikasiRoutes = require("./routes/verifikasi");
 const manageUsersRoutes = require("./routes/manageUsers");
+const manageContentRoutes = require("./routes/manageContent");
 const detailRoute = require("./routes/detail");
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use("/api", authRoutes);
 app.use("/api", requestDataRoutes);
 app.use("/api", verifikasiRoutes);
 app.use("/api", manageUsersRoutes);
+app.use("/api", manageContentRoutes);
 app.use('/api', detailRoute);
 
 app.listen(port, () => {

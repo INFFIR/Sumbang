@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Detail from "./pages/Detail";
 import ManageUser from "./pages/ManageUser";
 import Logout from "./pages/Logout";
+import ManageContent from "./pages/ManageContent";
 import "./App.css";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/detail/:id" element={<Detail />} />
             <Route path="/manage-user" element={<ManageUser />} />
+            <Route path="/manage-content" element={<ManageContent />} />
             <Route path="/logout" element={<Logout />} />
           </Routes>
         </div>

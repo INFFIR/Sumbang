@@ -21,6 +21,10 @@ const AdminNavbar = () => {
                 Manage User
               </NavDropdown.Item>
               <NavDropdown.Divider />
+              <NavDropdown.Item as={Link} to="/manage-content">
+                Manage Content
+              </NavDropdown.Item>
+              <NavDropdown.Divider />
               <NavDropdown.Item as={Link} to="/logout">
                 Logout
               </NavDropdown.Item>
