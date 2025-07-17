@@ -290,18 +290,18 @@ const handleSubmit = async () => {
           <Button variant="primary" onClick={handleSubmit}>Simpan</Button>
         </Modal.Footer>
       </Modal>
-      <Modal show={showPreviewModal} onHide={() => setShowPreviewModal(false)} centered size="lg">
-  <Modal.Header closeButton>
-    <Modal.Title>Pratinjau Gambar</Modal.Title>
-  </Modal.Header>
-  <Modal.Body className="text-center">
-    <img
-      src={`data:image/jpeg;base64,${previewImage}`}
-      alt="full"
-      style={{ maxWidth: "100%", maxHeight: "80vh", objectFit: "contain" }}
-    />
-  </Modal.Body>
-</Modal>
+          <Modal show={showPreviewModal} onHide={() => setShowPreviewModal(false)} centered size="lg">
+      <Modal.Header closeButton>
+        <Modal.Title>Pratinjau Gambar</Modal.Title>
+      </Modal.Header>
+      <Modal.Body className="text-center">
+        <img
+          src={`data:image/jpeg;base64,${previewImage}`}
+          alt="full"
+          style={{ maxWidth: "100%", maxHeight: "80vh", objectFit: "contain" }}
+        />
+      </Modal.Body>
+    </Modal>
 
     </Container>
   );

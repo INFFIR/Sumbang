@@ -1,123 +1,187 @@
-import React from "react";
-import { Button, Container, Row, Col, Card } from "react-bootstrap";
+import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
+import { Button, Container, Row, Col, Card, Carousel } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import MainNavbar from "../components/mainNavbar";
-import logo from "../images/Logo-dishub.png";
+import axios from "axios";
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [serviceList, setServiceList] = useState([]);
+  const [contentList, setContentList] = useState([]);
+  const cardRefs = useRef([]);
+  const [cardHeight, setCardHeight] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      // const token = localStorage.getItem("token");
+      // const [contentRes, serviceRes] = await Promise.all([
+      //   axios.get(`${process.env.REACT_APP_API_URL}/api/manage/content`, {
+      //     headers: { Authorization: `Bearer ${token}` },
+      //   }),
+      //   axios.get(`${process.env.REACT_APP_API_URL}/api/manage/service`, {
+      //     headers: { Authorization: `Bearer ${token}` },
+      //   }),
+      // ]
+      const [contentRes, serviceRes] = await Promise.all([
+      axios.get(`${process.env.REACT_APP_API_URL}/api/manage/content`),
+      axios.get(`${process.env.REACT_APP_API_URL}/api/manage/service`),
+      ]);
+      setContentList(contentRes.data);
+      setServiceList(serviceRes.data);
+    } catch (err) {
+      console.error("Failed to fetch data:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+  useLayoutEffect(() => {
+    if (cardRefs.current.length > 0) {
+      const heights = cardRefs.current.map(ref => ref?.offsetHeight || 0);
+      const max = Math.max(...heights);
+      setCardHeight(max);
+    }
+  }, [serviceList]);
 
   const handleLaporClick = () => {
-    navigate("/lapor"); // arahkan ke halaman lapor
+    navigate("/pelaporan");
   };
+
+  const renderContentCard = (content, index) => {
+    const isFirst = index === 0;
+    const isEven = index % 2 === 0;
+    const bgColor = isEven ? "bg-light" : "bg-dark text-white";
+    const textAlign = isEven ? "text-start" : "text-end";
+    const hasMedia = !!content.media;
+
+    return (
+      <section className={`${bgColor} py-5 border-top`} key={`content-${index}`}>
+        <Container>
+          <Row className="align-items-center justify-content-center">
+            {!hasMedia ? (
+              <Col md={8} className="text-center">
+                <h3 className="fw-bold">{content.title}</h3>
+                <p className="mt-4">{content.description}</p>
+                {isFirst && (
+                  <Button variant={isEven ? "secondary" : "light"} onClick={handleLaporClick}>
+                    Lapor Sekarang
+                  </Button>
+                )}
+              </Col>
+            ) : isEven ? (
+              <>
+                <Col md={7} className={textAlign}>
+                  <h3 className="fw-bold">{content.title}</h3>
+                  <p className="mt-4">{content.description}</p>
+                  {isFirst && (
+                    <Button variant="secondary" onClick={handleLaporClick}>
+                      Lapor Sekarang
+                    </Button>
+                  )}
+                </Col>
+                <Col md={5} className="text-center">
+                  <div className="bg-white rounded-4 p-4 shadow-sm d-inline-block">
+                    {content.media.startsWith("AAAA") ? (
+                      <video width="100%" controls>
+                        <source src={`data:video/mp4;base64,${content.media}`} type="video/mp4" />
+                        Browser tidak mendukung video.
+                      </video>
+                    ) : (
+                      <img
+                        src={`data:image/jpeg;base64,${content.media}`}
+                        alt="media"
+                        style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "cover" }}
+                      />
+                    )}
+                  </div>
+                </Col>
+              </>
+            ) : (
+              <>
+                <Col md={5} className="text-center">
+                  <div className="bg-white rounded-4 p-4 shadow-sm d-inline-block">
+                    {content.media.startsWith("AAAA") ? (
+                      <video width="100%" controls>
+                        <source src={`data:video/mp4;base64,${content.media}`} type="video/mp4" />
+                        Browser tidak mendukung video.
+                      </video>
+                    ) : (
+                      <img
+                        src={`data:image/jpeg;base64,${content.media}`}
+                        alt="media"
+                        style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "cover" }}
+                      />
+                    )}
+                  </div>
+                </Col>
+                <Col md={7} className={textAlign}>
+                  <h3 className="fw-bold">{content.title}</h3>
+                  <p className="mt-4">{content.description}</p>
+                  {isFirst && (
+                    <Button variant="light" onClick={handleLaporClick}>
+                      Lapor Sekarang
+                    </Button>
+                  )}
+                </Col>
+              </>
+            )}
+          </Row>
+        </Container>
+      </section>
+    );
+  };
+
+  const renderServiceSlider = () => (
+    <section className="py-5 text-center bg-white border-top">
+      <h4 className="mb-4 fw-semibold">Layanan</h4>
+      <Container>
+        <Carousel indicators={false} interval={null}>
+          {Array.from({ length: Math.ceil(serviceList.length / 3) }).map((_, slideIdx) => (
+            <Carousel.Item key={`slide-${slideIdx}`}>
+              <Row className="justify-content-center">
+                {serviceList.slice(slideIdx * 3, slideIdx * 3 + 3).map((s, i) => (
+                  <Col md={3} className="mx-2 mb-3" key={`service-card-${i}`}>
+                    <Card
+                      ref={el => (cardRefs.current[i + slideIdx * 3] = el)}
+                      style={{
+                        backgroundColor: "#CBD5E1",
+                        border: "none",
+                        borderRadius: "12px",
+                        height: cardHeight || "auto"
+                      }}
+                    >
+                      <Card.Body>
+                        <h5 className="fw-bold">{s.title}</h5>
+                        <p className="text-muted" style={{ fontSize: "0.9rem" }}>{s.description}</p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            </Carousel.Item>
+          ))}
+        </Carousel>
+      </Container>
+    </section>
+  );
+
+
+  const sections = [];
+  const maxIndex = Math.max(contentList.length, 1);
+  for (let i = 0; i < maxIndex; i++) {
+    if (contentList[i]) {
+      sections.push(renderContentCard(contentList[i], i));
+    }
+    if (i === 0 && serviceList.length > 0) {
+      sections.push(renderServiceSlider());
+    }
+  }
 
   return (
     <div>
       <MainNavbar />
-
-      {/* Section: Hero */}
-      <section className="bg-light py-5">
-        <Container>
-          <Row className="align-items-center">
-            <Col md={6}>
-              <h1 className="fw-bold">Dinas Perhubungan<br />Kota Batu</h1>
-              <p className="text-muted">
-                Dinas Perhubungan Kota Batu adalah instansi pemerintah yang bertanggung jawab dalam mengatur dan mengelola kebijakan transportasi di Kota Batu, Jawa Timur.
-              </p>
-              <Button variant="secondary" onClick={handleLaporClick}>
-                Lapor Sekarang
-              </Button>
-            </Col>
-            <Col md={6}>
-              <div className="d-flex justify-content-center border rounded p-5" style={{ borderColor: '#c0dbfc' }}>
-                <i className="bi bi-image fs-1 text-muted"></i>
-              </div>
-            </Col>
-          </Row>
-        </Container>
-      </section>
-
-      {/* Section: Layanan */}
-      <section className="py-5 text-center">
-  <h4 className="mb-4 fw-semibold">Layanan</h4>
-  <Container>
-    <Row className="justify-content-center">
-      {/* Kartu: Lapor */}
-      <Col md={3} className="mx-2 mb-3">
-        <Card style={{ backgroundColor: "#CBD5E1", border: "none", borderRadius: "12px" }}>
-          <Card.Body>
-            <h5 className="fw-bold">Lapor</h5>
-            <p className="text-muted" style={{ fontSize: "0.9rem" }}>
-              Lapor adalah layanan pelaporan online untuk masyarakat Kota Batu. Anda dapat melaporkan berbagai permasalahan lalu lintas seperti kerusakan rambu, lampu jalan, marka, serta fasilitas transportasi lainnya secara mudah dan cepat.
-            </p>
-          </Card.Body>
-        </Card>
-      </Col>
-
-      {/* Kartu: Status */}
-      <Col md={3} className="mx-2 mb-3">
-        <Card style={{ backgroundColor: "#CBD5E1", border: "none", borderRadius: "12px" }}>
-          <Card.Body>
-            <h5 className="fw-bold">Status</h5>
-            <p className="text-muted" style={{ fontSize: "0.9rem" }}>
-              Melalui fitur Status, masyarakat dapat memantau perkembangan dan progres laporan yang telah dikirim.
-            </p>
-          </Card.Body>
-        </Card>
-      </Col>
-
-      {/* Kartu: About Us */}
-      <Col md={3} className="mx-2 mb-3">
-        <Card style={{ backgroundColor: "#CBD5E1", border: "none", borderRadius: "12px" }}>
-          <Card.Body>
-            <h5 className="fw-bold">About Us</h5>
-            <p className="text-muted" style={{ fontSize: "0.9rem" }}>
-              SUMBANG adalah platform yang dirancang oleh Dinas Perhubungan Kota Batu untuk memudahkan masyarakat dalam menyampaikan laporan terkait sarana dan prasarana lalu lintas secara praktis dan efisien.
-            </p>
-          </Card.Body>
-        </Card>
-      </Col>
-    </Row>
-  </Container>
-</section>
-
-      <section className="bg-secondary-subtle py-5">
-        <Container>
-          <Row className="align-items-center">
-            <Col md={3} className="text-center mb-4 mb-md-0">
-              <div className="bg-white rounded p-5 shadow-sm d-inline-block">
-                <i className="bi bi-image fs-1 text-muted"></i>
-              </div>
-            </Col>
-            <Col md={9}>
-              <h4 className="fw-bold">Tutorial Pengisian Laporan Sumbang</h4>
-              <p className="text-muted">
-                Untuk mengetahui cara pengisian laporan di website SUMBANG, silakan scan kode QR di samping. Anda akan diarahkan ke video panduan singkat mengenai langkah-langkah pelaporan.
-              </p>
-            </Col>
-          </Row>
-        </Container>
-      </section>
-      {/* Section: Sumbang Description */}
-<section className="py-5 border-top">
-  <Container>
-    <Row className="align-items-center">
-      <Col md={7}>
-        <h3 className="fw-bold">SUMBANG</h3>
-        <h4 className="fw-bold">Sarana Prasarana Untuk<br />Masyarakat Batu Gampang</h4>
-        <p className="text-muted mt-4">
-          SUMBANG adalah sistem pelaporan daring (online) yang disediakan oleh Dinas Perhubungan Kota Batu untuk memudahkan masyarakat dalam menyampaikan aspirasi, laporan, atau permintaan perbaikan terkait fasilitas lalu lintas dan transportasi di Kota Batu.
-        </p>
-      </Col>
-      <Col md={5} className="text-center">
-        <div className="bg-light rounded-4 p-5 shadow-sm d-inline-block">
-          <i className="bi bi-image fs-1 text-muted"></i>
-        </div>
-      </Col>
-    </Row>
-  </Container>
-</section>
-
+      {sections}
     </div>
   );
 };
