@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Container, Table, Card, Form } from "react-bootstrap";
+import { Container, Table, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import AdminNavbar from "../components/adminNavbar";
-import LogoutNavbar from "../components/logoutNavbar";
 import { Button } from "react-bootstrap"; 
 import axios from "axios";
 import "../css/pages/Dashboard.css";
@@ -29,24 +28,7 @@ const Dashboard = () => {
     }
   };
 
-  // Helper function untuk mendapatkan tanggal relatif (opsional)
-  const getRelativeDate = (dateString) => {
-    if (!dateString) return "";
-    
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffTime = Math.abs(now - date);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 0) return "Hari ini";
-      if (diffDays === 1) return "Kemarin";
-      if (diffDays <= 7) return `${diffDays} hari lalu`;
-      return date.toLocaleDateString('id-ID');
-    } catch (error) {
-      return "";
-    }
-  };
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -248,12 +230,8 @@ const Dashboard = () => {
                               <td className="col-tanggal">
                                 {item.tanggal ? (
                                   <div>
-                                    
                                     <span className="date-text">{formatDate(item.tanggal)}</span>
                                     <br />
-                                    <small className="text-muted">
-                                      {getRelativeDate(item.tanggal)}
-                                    </small>
                                   </div>
                                 ) : (
                                   <span></span>
