@@ -117,24 +117,24 @@ const Verifikasi = () => {
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "Rejected":
-        return "🔴";
-      case "Approved":
-        return "🟢";
-      case "On Hold":
-        return "🟡";
-      case "On Process":
-        return "🔵";
-      case "Done":
-        return "✅";
-      case "Verifikasi":
-        return "⏳";
-      default:
-        return "🟡";
-    }
-  };
+  // const getStatusIcon = (status) => {
+  //   switch (status) {
+  //     case "Rejected":
+  //       return "🔴";
+  //     case "Approved":
+  //       return "🟢";
+  //     case "On Hold":
+  //       return "🟡";
+  //     case "On Process":
+  //       return "🔵";
+  //     case "Done":
+  //       return "✅";
+  //     case "Verifikasi":
+  //       return "⏳";
+  //     default:
+  //       return "🟡";
+  //   }
+  // };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -157,7 +157,7 @@ const Verifikasi = () => {
                 <div className="card-body p-5">
                   {/* Header Section */}
                   <div className="header-section mb-4">
-                    <h2 className="page-title" style={{ color: '#2c3e50' }}>Aktivitas Laporan Sumbang</h2>
+                    <h2 className="page-title" style={{ color: '#2c3e50' }}>Status Laporan Sumbang</h2>
                     <p className="page-subtitle text-muted">Sarana Prasarana Untuk Masyarakat Batu Gampang</p>
                   </div>
 
@@ -237,7 +237,7 @@ const Verifikasi = () => {
                               <td className="col-status">
                                 {item.status && (
                                   <span className={`status-badge ${getStatusClass(item.status)}`}>
-                                    <span className="status-icon">{getStatusIcon(item.status)}</span>
+                                    {/* <span className="status-icon">{getStatusIcon(item.status)}</span> */}
                                     {item.status}
                                   </span>
                                 )}

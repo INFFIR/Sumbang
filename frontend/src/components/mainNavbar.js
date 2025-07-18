@@ -7,7 +7,7 @@ const MainNavbar = () => {
   return (
     <Navbar bg="light" variant="light" expand="lg" className="shadow-sm">
       <Container>
-        {/* Bagian logo tidak diubah sesuai instruksi, hanya warna teks disesuaikan */}
+        {/* Bagian logo tidak diubah*/}
         <Navbar.Brand as={Link} to="/" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <img
             src={logo}
@@ -33,11 +33,7 @@ const MainNavbar = () => {
             </Nav.Link>
             {/* Mengganti "Status" menjadi "Aktivitas" dan link ke /verifikasi */}
             <Nav.Link as={Link} to="/verifikasi" style={{ color: "black" }}>
-              Aktivitas
-            </Nav.Link>
-            {/* Menambahkan menu "About Us" */}
-            <Nav.Link as={Link} to="/about" style={{ color: "black" }}>
-              About Us
+              Status
             </Nav.Link>
             <Nav.Link as={Link} to="/login" style={{ color: "black" }}>
               Login

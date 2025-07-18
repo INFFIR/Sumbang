@@ -160,7 +160,7 @@ const Dashboard = () => {
                 <div className="card-body p-5">
                   {/* Header Section */}
                   <div className="header-section mb-4">
-                    <h2 className="page-title" style={{ color: '#2c3e50' }}>Aktivitas Laporan Sumbang</h2>
+                    <h2 className="page-title" style={{ color: '#2c3e50' }}>Status Laporan Sumbang</h2>
                     <p className="page-subtitle text-muted">Sarana Prasarana Untuk Masyarakat Batu Gampang</p>
                   </div>
 
