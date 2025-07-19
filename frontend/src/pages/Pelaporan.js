@@ -353,7 +353,7 @@ const Pelaporan = () => {
                     </Form.Group>
 
                     <Form.Group className="mb-5" controlId="formFoto">
-                      <Form.Label className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>Foto Lokasi (Opsional)</Form.Label>
+                      <Form.Label className="fw-semibold mb-2" style={{ color: '#2c3e50' }}>Foto Lokasi</Form.Label>
                       <Form.Control
                         type="file"
                         accept=".jpg,.jpeg,.png"

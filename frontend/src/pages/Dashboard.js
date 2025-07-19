@@ -210,7 +210,7 @@ const Dashboard = () => {
                     <Table className="custom-table">
                       <thead>
                         <tr>
-                          <th className="col-no">No.</th>
+                          <th className="col-no">ID</th>
                           <th className="col-nama">Nama Lengkap</th>
                           <th className="col-permintaan">Permintaan</th>
                           <th className="col-lokasi">Lokasi</th>
@@ -223,11 +223,11 @@ const Dashboard = () => {
                         {filteredData.length > 0 ? (
                           filteredData.map((item) => (
                             <tr key={item.id}>
-                              <td className="col-no">{item.id}</td>
+                              <td className="col-no text-center align-middle">{item.id}</td>
                               <td className="col-nama">{item.nama}</td>
                               <td className="col-permintaan">{item.permintaan}</td>
                               <td className="col-lokasi">{item.lokasi}</td>
-                              <td className="col-tanggal">
+                              <td className="col-tanggal text-center align-middle">
                                 {item.tanggal ? (
                                   <div>
                                     <span className="date-text">{formatDate(item.tanggal)}</span>
@@ -237,7 +237,7 @@ const Dashboard = () => {
                                   <span></span>
                                 )}
                               </td>
-                              <td className="col-status">
+                              <td className="col-status text-center align-middle">
                                 {item.status && (
                                   <span className={`status-badge ${getStatusClass(item.status)}`}>
                                     {/* <span className="status-icon">{getStatusIcon(item.status)}</span> */}
@@ -245,7 +245,7 @@ const Dashboard = () => {
                                   </span>
                                 )}
                               </td>
-                              <td className="col-detail">
+                              <td className="col-detail text-center align-middle">
                                 <Link to={`/detail/${item.id}`}>
                                   <Button variant="info">Detail</Button>
                                 </Link>
