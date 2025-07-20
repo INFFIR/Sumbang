@@ -7,33 +7,11 @@ const multer = require("multer");
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// // --- GET All Content ---
-// router.get("/manage/content", authenticateToken, async (req, res) => {
-//   try {
-//     const [rows] = await pool.query("SELECT id, title, description, TO_BASE64(media) as media FROM content");
-//     res.json(rows);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
-// // --- GET All Services ---
-// router.get("/manage/service", authenticateToken, async (req, res) => {
-//   try {
-//     const [rows] = await pool.query("SELECT id, title, description FROM service");
-//     res.json(rows);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
 // --- GET All Content (Public) ---
 router.get("/manage/content", async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, title, description, TO_BASE64(media) as media FROM content"
+      "SELECT id, title, description, TO_BASE64(media) as media, url FROM content"
     );
     res.json(rows);
   } catch (error) {
@@ -55,17 +33,23 @@ router.get("/manage/service", async (req, res) => {
   }
 });
 
-
 // --- CREATE Content ---
 router.post("/manage/content/create", authenticateToken, upload.single("media"), async (req, res) => {
-  const { title, description } = req.body;
+  const { title, description, url } = req.body;
   const media = req.file ? req.file.buffer : null;
-  if (!title && !description && !media) return res.status(400).json({ error: "Minimal satu field harus diisi" });
+
+  if (!title && !description && !media && !url) {
+    return res.status(400).json({ error: "Minimal satu field harus diisi" });
+  }
+
+  if (media && url) {
+    return res.status(400).json({ error: "Hanya salah satu dari media atau url yang boleh diisi" });
+  }
 
   try {
     await pool.query(
-      "INSERT INTO content (title, description, media) VALUES (?, ?, ?)",
-      [title || null, description || null, media]
+      "INSERT INTO content (title, description, media, url) VALUES (?, ?, ?, ?)",
+      [title || null, description || null, media, url || null]
     );
     res.status(200).json({ message: "Content berhasil ditambahkan" });
   } catch (err) {
@@ -90,16 +74,23 @@ router.post("/manage/service/create", authenticateToken, async (req, res) => {
 
 // --- EDIT Content ---
 router.post("/manage/content/edit/:id", authenticateToken, upload.single("media"), async (req, res) => {
-  const { title, description } = req.body;
+  const { title, description, url } = req.body;
   const media = req.file ? req.file.buffer : null;
   const { id } = req.params;
 
+  if (media && url) {
+    return res.status(400).json({ error: "Hanya salah satu dari media atau url yang boleh diisi" });
+  }
+
   try {
-    const query = media
-      ? "UPDATE content SET title = ?, description = ?, media = ? WHERE id = ?"
-      : "UPDATE content SET title = ?, description = ? WHERE id = ?";
-    const params = media ? [title || null, description || null, media, id] : [title || null, description || null, id];
-    await pool.query(query, params);
+    let query = "UPDATE content SET title = ?, description = ?, media = ?, url = ? WHERE id = ?";
+    let mediaValue = media || null;
+    let urlValue = url || null;
+
+    if (media) urlValue = null;
+    if (url) mediaValue = null;
+
+    await pool.query(query, [title || null, description || null, mediaValue, urlValue, id]);
     res.status(200).json({ message: "Content berhasil diubah" });
   } catch (err) {
     console.error(err);
