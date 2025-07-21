@@ -103,7 +103,7 @@ const Detail = () => {
     <>
       <DetailNavbar />
       <Container className="mt-5">
-        <h3 className="fw-bold">Detail Laporan Sumbang</h3>
+        <h3 className="fw-bold">Detail Pelapor Sumbang</h3>
         <p className="text-muted mb-4">
           Sarana Prasarana Untuk Masyarakat Batu Gampang
         </p>
@@ -121,23 +121,24 @@ const Detail = () => {
               <Form.Label>Nomor Telpon</Form.Label>
               <Form.Control value={data.no_hp} disabled />
             </Form.Group>
-            <Form.Group className="mb-3">
+           <Form.Group className="mb-3">
               <Form.Label>Nomor WhatsApp</Form.Label>
-              <div className="d-flex align-items-center">
-                <Form.Control value={data.no_whatsapp} disabled className="me-2" />
-                {data.no_whatsapp && getWhatsAppUrl(data.no_whatsapp) && (
-                  <Button 
-                    variant="success" 
-                    size="sm"
-                    onClick={() => window.open(getWhatsAppUrl(data.no_whatsapp), '_blank')}
-                    className="d-flex align-items-center"
-                    style={{ minWidth: 'auto', whiteSpace: 'nowrap' }}
+              {data.no_whatsapp && getWhatsAppUrl(data.no_whatsapp) ? (
+                <div>
+                  <a
+                    href={getWhatsAppUrl(data.no_whatsapp)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="d-inline-flex align-items-center px-3 py-2 rounded text-white"
+                    style={{ backgroundColor: "#2F5D9F", textDecoration: "none" }}
                   >
-                    <i className="fab fa-whatsapp me-1"></i>
-                    Chat
-                  </Button>
-                )}
-              </div>
+                    <i className="fab fa-whatsapp me-2"></i>
+                    Hubungi via WhatsApp
+                  </a>
+                </div>
+              ) : (
+                <p className="text-muted">Tidak tersedia</p>
+              )}
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Permintaan</Form.Label>
@@ -189,30 +190,45 @@ const Detail = () => {
         </Row>
 
         {/* TOMBOL AKSI */}
-        <div className="d-flex justify-content-start gap-2 mt-4">
-          <Button variant="warning" onClick={() => setShowDeleteModal(true)}>
+        <div className="d-flex justify-content-start gap-2 mt-4 mb-4">
+          <Button
+            style={{ backgroundColor: "#C0392B" }} // kuning (warning)
+            onClick={() => setShowDeleteModal(true)}
+          >
             Hapus Data
           </Button>
 
           {data.status === "Approved" && (
             <>
-              <Button variant="secondary" onClick={() => setShowOnHoldModal(true)}>
+              <Button
+                style={{ backgroundColor: "#7F8C8D"}} // abu (secondary)
+                onClick={() => setShowOnHoldModal(true)}
+              >
                 On Hold
               </Button>
-              <Button variant="info" onClick={() => setShowOnProcessModal(true)}>
+              <Button
+                style={{ backgroundColor: "#2980B9" }} // biru muda (info)
+                onClick={() => setShowOnProcessModal(true)}
+              >
                 On Process
               </Button>
             </>
           )}
 
           {data.status === "On Process" && (
-            <Button variant="success" onClick={() => setShowDoneModal(true)}>
+            <Button
+              style={{ backgroundColor: "#191987ff"}} // hijau (success)
+              onClick={() => setShowDoneModal(true)}
+            >
               Done
             </Button>
           )}
 
           {data.status === "On Hold" && (
-            <Button variant="info" onClick={() => setShowOnProcessModal(true)}>
+            <Button
+              style={{ backgroundColor: "#2980B9" }} // biru muda (info)
+              onClick={() => setShowOnProcessModal(true)}
+            >
               On Process
             </Button>
           )}
@@ -220,7 +236,7 @@ const Detail = () => {
           {["Rejected", "Approved", "On Process", "On Hold", "Done"].includes(data.status) === false && (
             <>
               <Button
-                variant="danger"
+                style={{ backgroundColor: "#E74C3C" }} // merah (danger)
                 onClick={() => {
                   setModalType("Rejected");
                   setShowModal(true);
@@ -229,7 +245,7 @@ const Detail = () => {
                 Rejected
               </Button>
               <Button
-                variant="success"
+                style={{ backgroundColor: "#27AE60" }} // hijau (success)
                 onClick={() => {
                   setModalType("Approved");
                   setShowModal(true);
@@ -243,63 +259,97 @@ const Detail = () => {
       </Container>
 
       {/* Modal Approve/Reject */}
-      <Modal show={showModal} onHide={handleClose} centered>
-        <Modal.Body className="text-center">
-          <p>
-            Apakah anda yakin ingin mengubah status menjadi{" "}
-            <strong>{modalType}</strong>?
-          </p>
-          <Button variant="secondary" onClick={handleClose} className="me-2">
-            Batal
-          </Button>
-          <Button
-            variant={modalType === "Approved" ? "success" : "danger"}
-            onClick={() => handleUpdateStatus(modalType)}
-          >
-            OK
-          </Button>
-        </Modal.Body>
-      </Modal>
+        <Modal show={showModal} onHide={handleClose} centered>
+          <Modal.Body className="text-center">
+            <p>
+              Apakah anda yakin ingin mengubah status menjadi{" "}
+              <strong>{modalType}</strong>?
+            </p>
+            <Button variant="secondary" onClick={handleClose} className="me-2">
+              Batal
+            </Button>
+            <Button
+              style={{ backgroundColor: "#27AE60", color: "#fff" }}
+              onClick={() => handleUpdateStatus(modalType)}
+            >
+              OK
+            </Button>
+          </Modal.Body>
+        </Modal>
 
-      {/* Modal Delete */}
-      <Modal show={showDeleteModal} onHide={handleClose} centered>
-        <Modal.Body className="text-center">
-          <p>Apakah anda yakin ingin menghapus data ini?</p>
-          <Button variant="secondary" onClick={handleClose} className="me-2">
-            Batal
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            OK
-          </Button>
-        </Modal.Body>
-      </Modal>
+        {/* Modal Delete */}
+        <Modal show={showDeleteModal} onHide={handleClose} centered>
+          <Modal.Body className="text-center">
+            <p>Apakah anda yakin ingin menghapus data ini?</p>
+            <Button variant="secondary" onClick={handleClose} className="me-2">
+              Batal
+            </Button>
+            <Button
+              style={{ backgroundColor: "#27AE60", color: "#fff" }}
+              onClick={handleDelete}
+            >
+              OK
+            </Button>
+          </Modal.Body>
+        </Modal>
 
-      {/* Modal On Hold */}
-      <Modal show={showOnHoldModal} onHide={handleClose} centered>
-        <Modal.Body className="text-center">
-          <p>Apakah anda yakin ingin menandai laporan ini sebagai <strong>On Hold</strong>?</p>
-          <Button variant="secondary" onClick={handleClose} className="me-2">Batal</Button>
-          <Button variant="secondary" onClick={() => handleUpdateStatus("On Hold")}>OK</Button>
-        </Modal.Body>
-      </Modal>
+        {/* Modal On Hold */}
+        <Modal show={showOnHoldModal} onHide={handleClose} centered>
+          <Modal.Body className="text-center">
+            <p>
+              Apakah anda yakin ingin menandai laporan ini sebagai{" "}
+              <strong>On Hold</strong>?
+            </p>
+            <Button variant="secondary" onClick={handleClose} className="me-2">
+              Batal
+            </Button>
+            <Button
+              style={{ backgroundColor: "#27AE60", color: "#fff" }}
+              onClick={() => handleUpdateStatus("On Hold")}
+            >
+              OK
+            </Button>
+          </Modal.Body>
+        </Modal>
 
-      {/* Modal On Process */}
-      <Modal show={showOnProcessModal} onHide={handleClose} centered>
-        <Modal.Body className="text-center">
-          <p>Apakah anda yakin ingin menandai laporan ini sebagai <strong>On Process</strong>?</p>
-          <Button variant="secondary" onClick={handleClose} className="me-2">Batal</Button>
-          <Button variant="info" onClick={() => handleUpdateStatus("On Process")}>OK</Button>
-        </Modal.Body>
-      </Modal>
+        {/* Modal On Process */}
+        <Modal show={showOnProcessModal} onHide={handleClose} centered>
+          <Modal.Body className="text-center">
+            <p>
+              Apakah anda yakin ingin menandai laporan ini sebagai{" "}
+              <strong>On Process</strong>?
+            </p>
+            <Button variant="secondary" onClick={handleClose} className="me-2">
+              Batal
+            </Button>
+            <Button
+              style={{ backgroundColor: "#27AE60", color: "#fff" }}
+              onClick={() => handleUpdateStatus("On Process")}
+            >
+              OK
+            </Button>
+          </Modal.Body>
+        </Modal>
 
-      {/* Modal Done */}
-      <Modal show={showDoneModal} onHide={handleClose} centered>
-        <Modal.Body className="text-center">
-          <p>Apakah anda yakin ingin menandai laporan ini sebagai <strong>Done</strong>?</p>
-          <Button variant="secondary" onClick={handleClose} className="me-2">Batal</Button>
-          <Button variant="success" onClick={() => handleUpdateStatus("Done")}>OK</Button>
-        </Modal.Body>
-      </Modal>
+        {/* Modal Done */}
+        <Modal show={showDoneModal} onHide={handleClose} centered>
+          <Modal.Body className="text-center">
+            <p>
+              Apakah anda yakin ingin menandai laporan ini sebagai{" "}
+              <strong>Done</strong>?
+            </p>
+            <Button variant="secondary" onClick={handleClose} className="me-2">
+              Batal
+            </Button>
+            <Button
+              style={{ backgroundColor: "#27AE60", color: "#fff" }}
+              onClick={() => handleUpdateStatus("Done")}
+            >
+              OK
+            </Button>
+          </Modal.Body>
+        </Modal>
+
     </>
   );
 };

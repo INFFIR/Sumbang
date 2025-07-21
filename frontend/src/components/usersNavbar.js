@@ -5,7 +5,7 @@ import logo from "../images/Logo-dishub.png"; // Impor logo
 
 const UsersNavbar = () => {
   return (
-    <Navbar bg="light" variant="light" expand="lg" className="shadow-sm">
+    <Navbar expand="lg" className="shadow-sm" style={{ backgroundColor: "#2F5D9F"}}>
       <Container>
         <Navbar.Brand
           as={Link}
@@ -19,12 +19,12 @@ const UsersNavbar = () => {
             height="45"
             className="d-inline-block align-top"
           />
-          <span style={{ color: "black" }}>Dinas Perhubungan Kota Batu</span>
+          <span style={{ color: "white" }}>Dinas Perhubungan Kota Batu</span>
         </Navbar.Brand>
 
         <Nav className="ms-auto">
           <NavDropdown
-            title={<span style={{ color: "black" }}>Manage</span>}
+            title={<span style={{ color: "white" }}>Manage</span>}
             id="user-nav-dropdown"
             align="end"
           >

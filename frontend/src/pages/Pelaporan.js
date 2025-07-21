@@ -382,7 +382,7 @@ const Pelaporan = () => {
                           borderRadius: '8px',
                           padding: '12px 24px',
                           fontWeight: '600',
-                          backgroundColor: loading ? '#6c757d' : '#95a5a6',
+                          backgroundColor: loading ? '#6c757d' : '#2F5D9F',
                           borderColor: loading ? '#6c757d' : '#95a5a6',
                           color: '#ffffff',
                           fontSize: '16px'

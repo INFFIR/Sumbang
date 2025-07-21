@@ -210,7 +210,7 @@ const LandingPage = () => {
           <p className="mt-4">{content.description}</p>
           {isFirst && (
             <Button
-              style={{ backgroundColor: '#EDB44D', borderColor: '#EDB44D', color: '#fff' }}
+              style={{ backgroundColor: '#2F5D9F', borderColor: '#2F5D9F', color: 'black' }}
               onClick={handleLaporClick}
             >
               Lapor Sekarang
@@ -224,7 +224,7 @@ const LandingPage = () => {
             <p className="mt-4">{content.description}</p>
             {isFirst && (
               <Button
-                style={{ backgroundColor: '#EDB44D', borderColor: '#EDB44D', color: '#fff' }}
+                style={{ backgroundColor: '#2F5D9F', borderColor: '#2F5D9F', color: 'white' }}
                 onClick={handleLaporClick}
               >
                 Lapor Sekarang
@@ -245,7 +245,7 @@ const LandingPage = () => {
             <p className="mt-4">{content.description}</p>
             {isFirst && (
               <Button
-                style={{ backgroundColor: '#EDB44D', borderColor: '#EDB44D', color: '#fff' }}
+                style={{ backgroundColor: '#2F5D9F', borderColor: '#2F5D9F', color: '#fff' }}
                 onClick={handleLaporClick}
               >
                 Lapor Sekarang

@@ -17,7 +17,7 @@ const DetailNavbar = () => {
             className="d-inline-block align-top"
           />
           {/* Menggunakan style inline untuk memastikan warna teks hitam */}
-          <span style={{ color: "black" }}>Dinas Perhubungan Kota Batu</span>
+          <span style={{ color: "white" }}>Dinas Perhubungan Kota Batu</span>
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />

@@ -12,16 +12,23 @@ const Verifikasi = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Helper function untuk format tanggal
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Format tanggal
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      return date.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
     } catch (error) {
-      console.error('Error formatting date:', error);
+      console.error("Error formatting date:", error);
       return dateString;
     }
   };
@@ -38,17 +45,15 @@ const Verifikasi = () => {
             },
           }
         );
-        
-        // Process data untuk memastikan tanggal ter-format dengan benar
-        const processedData = response.data.map(item => ({
+
+        const processedData = response.data.map((item) => ({
           ...item,
-          // Gunakan tanggal dari backend, atau created_at, atau tanggal saat ini sebagai fallback
-          tanggal: item.tanggal || item.created_at || item.date || new Date().toISOString()
+          tanggal:
+            item.tanggal || item.created_at || item.date || new Date().toISOString(),
         }));
-        
-        // Sort data berdasarkan ID terbesar (descending)
+
         const sortedData = processedData.sort((a, b) => b.id - a.id);
-        
+
         setData(sortedData);
         setFilteredData(sortedData);
       } catch (error) {
@@ -65,28 +70,28 @@ const Verifikasi = () => {
 
   useEffect(() => {
     let results = data;
-    
-    // Filter berdasarkan status
+
     if (statusFilter !== "all") {
-      results = results.filter(item => 
-        item.status.toLowerCase() === statusFilter.toLowerCase()
+      results = results.filter(
+        (item) =>
+          item.status &&
+          item.status.toLowerCase() === statusFilter.toLowerCase()
       );
     }
-    
-    // Filter berdasarkan search query (fokus pada nama lengkap)
+
     if (searchQuery) {
-      results = results.filter(item =>
-        item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.permintaan.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.lokasi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        formatDate(item.tanggal).toLowerCase().includes(searchQuery.toLowerCase())
+      results = results.filter(
+        (item) =>
+          item.nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.permintaan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.lokasi?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          formatDate(item.tanggal).toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
-    // Pastikan filtered data tetap terurut berdasarkan ID terbesar
+
     results = results.sort((a, b) => b.id - a.id);
-    
     setFilteredData(results);
+    setCurrentPage(1); // Reset halaman saat filter berubah
   }, [searchQuery, statusFilter, data]);
 
   const handleSearchChange = (e) => {
@@ -97,10 +102,11 @@ const Verifikasi = () => {
     setStatusFilter(e.target.value);
   };
 
-  // Helper function untuk mendapatkan jumlah per status
   const getStatusCount = (status) => {
     if (status === "all") return data.length;
-    return data.filter(item => item.status.toLowerCase() === status.toLowerCase()).length;
+    return data.filter(
+      (item) => item.status?.toLowerCase() === status.toLowerCase()
+    ).length;
   };
 
   const getStatusClass = (status) => {
@@ -122,146 +128,176 @@ const Verifikasi = () => {
     }
   };
 
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
   return (
     <>
       <MainNavbar />
-      <div style={{ backgroundColor: '#e9ecef', minHeight: '100vh', paddingTop: '40px', paddingBottom: '40px' }}>
+      <div
+        style={{
+          backgroundColor: "#e9ecef",
+          minHeight: "100vh",
+          paddingTop: "40px",
+          paddingBottom: "40px",
+        }}
+      >
         <Container>
           <div className="row justify-content-center">
             <div className="col-12">
-              <div 
+              <div
                 className="card shadow-sm"
                 style={{
-                  borderRadius: '12px',
-                  border: 'none',
-                  backgroundColor: '#ffffff'
+                  borderRadius: "12px",
+                  border: "none",
+                  backgroundColor: "#ffffff",
                 }}
               >
                 <div className="card-body p-5">
-                  {/* Header Section */}
                   <div className="header-section mb-4">
-                    <h2 className="page-title" style={{ color: '#2c3e50' }}>Status Laporan Sumbang</h2>
-                    <p className="page-subtitle text-muted">Sarana Prasarana Untuk Masyarakat Batu Gampang</p>
+                    <h2 className="page-title" style={{ color: "#2c3e50" }}>
+                      Status Laporan Sumbang
+                    </h2>
+                    <p className="page-subtitle text-muted">
+                      Sarana Prasarana Untuk Masyarakat Batu Gampang
+                    </p>
                   </div>
 
-                  {/* Search and Filter Section */}
-                    <div className="search-filter-section mb-4">
-                      <div className="row g-3">
-                        <div className="col-md-8">
-                          <Form.Control
-                            type="text"
-                            placeholder="Cari nama lengkap, permintaan, lokasi, atau tanggal..."
-                            value={searchQuery}
-                            onChange={handleSearchChange}
-                            style={{
-                              borderRadius: '8px',
-                              border: '1px solid #dee2e6',
-                              padding: '12px 16px',
-                              fontSize: '16px'
-                            }}
-                          />
-                        </div>
-                        <div className="col-md-4">
-                          <Form.Select
-                            value={statusFilter}
-                            onChange={handleStatusFilterChange}
-                            style={{
-                              borderRadius: '8px',
-                              border: '1px solid #dee2e6',
-                              padding: '12px 16px',
-                              fontSize: '16px'
-                            }}
-                          >
-                            <option value="all">Semua Status ({getStatusCount("all")})</option>
-                            <option value="verifikasi">Verifikasi ({getStatusCount("verifikasi")})</option>
-                            <option value="approved">Disetujui ({getStatusCount("approved")})</option>
-                            <option value="rejected">Ditolak ({getStatusCount("rejected")})</option>
-                            <option value="on process">Dalam Proses ({getStatusCount("on process")})</option>
-                            <option value="on hold">Ditahan ({getStatusCount("on hold")})</option>
-                            <option value="done">Selesai ({getStatusCount("done")})</option>
-                          </Form.Select>
-                        </div>
+                  {/* Search & Filter */}
+                  <div className="search-filter-section mb-4">
+                    <div className="row g-3">
+                      <div className="col-md-8">
+                        <Form.Control
+                          type="text"
+                          placeholder="Cari nama lengkap, permintaan, lokasi, atau tanggal..."
+                          value={searchQuery}
+                          onChange={handleSearchChange}
+                          style={{
+                            borderRadius: "8px",
+                            border: "1px solid #dee2e6",
+                            padding: "12px 16px",
+                            fontSize: "16px",
+                          }}
+                        />
+                      </div>
+                      <div className="col-md-4">
+                        <Form.Select
+                          value={statusFilter}
+                          onChange={handleStatusFilterChange}
+                          style={{
+                            borderRadius: "8px",
+                            border: "1px solid #dee2e6",
+                            padding: "12px 16px",
+                            fontSize: "16px",
+                          }}
+                        >
+                          <option value="all">
+                            Semua Status ({getStatusCount("all")})
+                          </option>
+                          <option value="verifikasi">
+                            Verifikasi ({getStatusCount("verifikasi")})
+                          </option>
+                          <option value="approved">
+                            Disetujui ({getStatusCount("approved")})
+                          </option>
+                          <option value="rejected">
+                            Ditolak ({getStatusCount("rejected")})
+                          </option>
+                          <option value="on process">
+                            Dalam Proses ({getStatusCount("on process")})
+                          </option>
+                          <option value="on hold">
+                            Ditahan ({getStatusCount("on hold")})
+                          </option>
+                          <option value="done">
+                            Selesai ({getStatusCount("done")})
+                          </option>
+                        </Form.Select>
                       </div>
                     </div>
+                  </div>
 
-                  {/* Table Section */}
+                  {/* Table */}
                   <div className="table-container">
                     <Table className="custom-table">
                       <thead>
                         <tr>
-                          <th className="col-no">ID</th>
-                          <th className="col-nama">Nama Lengkap</th>
-                          <th className="col-permintaan">Permintaan</th>
-                          <th className="col-lokasi">Lokasi</th>
-                          <th className="col-tanggal">Tanggal</th>
-                          <th className="col-status">Status</th>
+                          <th>ID</th>
+                          <th>Nama Lengkap</th>
+                          <th>Permintaan</th>
+                          <th>Lokasi</th>
+                          <th>Tanggal</th>
+                          <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredData.length > 0 ? (
-                          filteredData.map((item) => (
+                        {currentItems.length > 0 ? (
+                          currentItems.map((item) => (
                             <tr key={item.id}>
-                              <td className="col-no text-center align-middle">{item.id}</td>
-                              <td className="col-nama">{item.nama}</td>
-                              <td className="col-permintaan">{item.permintaan}</td>
-                              <td className="col-lokasi">{item.lokasi}</td>
-                              <td className="col-tanggal text-center align-middle">
-                                {item.tanggal ? (
-                                  <div>
-                                    <span className="date-text">{formatDate(item.tanggal)}</span>
-                                    <br />
-                                  </div>
-                                ) : (
-                                  <span></span>
-                                )}
+                              <td className="text-center align-middle">{item.id}</td>
+                              <td>{item.nama}</td>
+                              <td>{item.permintaan}</td>
+                              <td>{item.lokasi}</td>
+                              <td className="text-center align-middle">
+                                {formatDate(item.tanggal)}
                               </td>
-                              <td className="col-status text-center align-middle">
-                                {item.status && (
-                                  <span className={`status-badge ${getStatusClass(item.status)}`}>
-                                    {item.status}
-                                  </span>
-                                )}
+                              <td className="text-center align-middle">
+                                <span className={`status-badge ${getStatusClass(item.status)}`}>
+                                  {item.status}
+                                </span>
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
                             <td colSpan="6" className="text-center text-muted py-5">
-                              <div>
-                                <i className="fas fa-search mb-2" style={{ fontSize: '2rem', opacity: 0.5 }}></i>
-                                <h5 className="mb-2">
-                                  {searchQuery && statusFilter !== "all" 
-                                    ? `Tidak ada data "${searchQuery}" dengan status "${statusFilter}"`
-                                    : searchQuery 
-                                    ? `Tidak ada data yang sesuai dengan pencarian "${searchQuery}"`
-                                    : statusFilter !== "all"
-                                    ? `Tidak ada laporan dengan status "${statusFilter}"`
-                                    : "Tidak ada data laporan"
-                                  }
-                                </h5>
-                                <p className="mb-0">
-                                  {searchQuery || statusFilter !== "all" 
-                                    ? "Coba ubah filter atau kata kunci pencarian"
-                                    : "Belum ada laporan yang masuk"
-                                  }
-                                </p>
-                              </div>
+                              Tidak ada data yang ditemukan
                             </td>
                           </tr>
                         )}
                       </tbody>
                     </Table>
                   </div>
-                  
-                  {/* Summary Section */}
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="d-flex justify-content-center mt-4">
+                      <nav>
+                        <ul className="pagination">
+                          <li className={`page-item ${currentPage === 1 && "disabled"}`}>
+                            <button className="page-link" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>
+                              Previous
+                            </button>
+                          </li>
+                          {[...Array(totalPages)].map((_, index) => (
+                            <li key={index} className={`page-item ${currentPage === index + 1 && "active"}`}>
+                              <button className="page-link" onClick={() => setCurrentPage(index + 1)}>
+                                {index + 1}
+                              </button>
+                            </li>
+                          ))}
+                          <li className={`page-item ${currentPage === totalPages && "disabled"}`}>
+                            <button className="page-link" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}>
+                              Next
+                            </button>
+                          </li>
+                        </ul>
+                      </nav>
+                    </div>
+                  )}
+
+                  {/* Summary & Reset Filter */}
                   <div className="summary-section mt-4">
                     <div className="row">
                       <div className="col-md-6">
                         <small className="text-muted">
-                          Menampilkan {filteredData.length} dari {data.length} laporan
+                          Menampilkan {currentItems.length} dari {filteredData.length} laporan
                           {statusFilter !== "all" && ` (filter: ${statusFilter})`}
                           {searchQuery && ` (pencarian: "${searchQuery}")`}
                         </small>
@@ -274,7 +310,7 @@ const Verifikasi = () => {
                               setSearchQuery("");
                               setStatusFilter("all");
                             }}
-                            style={{ borderRadius: '20px' }}
+                            style={{ borderRadius: "20px" }}
                           >
                             Reset Filter
                           </button>
