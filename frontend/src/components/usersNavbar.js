@@ -1,14 +1,17 @@
 import React from "react";
 import { Navbar, Nav, NavDropdown, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import logo from "../images/Logo-dishub.png"; // impor logo
+import logo from "../images/Logo-dishub.png"; // Impor logo
 
 const UsersNavbar = () => {
   return (
-    <Navbar expand="lg" style={{ backgroundColor: "#4e93dc" }}>
+    <Navbar bg="light" variant="light" expand="lg" className="shadow-sm">
       <Container>
-        {/* Bagian logo tidak diubah*/}
-        <Navbar.Brand as={Link} to="/" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <Navbar.Brand
+          as={Link}
+          to="/"
+          style={{ display: "flex", alignItems: "center", gap: "10px" }}
+        >
           <img
             src={logo}
             alt="Logo Dishub"
@@ -16,28 +19,24 @@ const UsersNavbar = () => {
             height="45"
             className="d-inline-block align-top"
           />
-          {/* Menggunakan style inline untuk memastikan warna teks hitam */}
           <span style={{ color: "black" }}>Dinas Perhubungan Kota Batu</span>
         </Navbar.Brand>
 
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto"></Nav>
-          <Nav>
-            <NavDropdown
-              title={<span style={{ color: "white" }}>Manage</span>}
-              id="admin-nav-dropdown"
-            >
-              <NavDropdown.Item as={Link} to="/dashboard">
-                Dashboard
-              </NavDropdown.Item>
-              <NavDropdown.Divider />
-              <NavDropdown.Item as={Link} to="/logout">
-                Logout
-              </NavDropdown.Item>
-            </NavDropdown>
-          </Nav>
-        </Navbar.Collapse>
+        <Nav className="ms-auto">
+          <NavDropdown
+            title={<span style={{ color: "black" }}>Manage</span>}
+            id="user-nav-dropdown"
+            align="end"
+          >
+            <NavDropdown.Item as={Link} to="/dashboard">
+              Dashboard
+            </NavDropdown.Item>
+            <NavDropdown.Divider />
+            <NavDropdown.Item as={Link} to="/logout">
+              Logout
+            </NavDropdown.Item>
+          </NavDropdown>
+        </Nav>
       </Container>
     </Navbar>
   );

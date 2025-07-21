@@ -5,7 +5,7 @@ import logo from "../images/Logo-dishub.png"; // impor logo
 
 const MainNavbar = () => {
   return (
-    <Navbar bg="light" variant="light" expand="lg" className="shadow-sm">
+    <Navbar expand="lg" className="shadow-sm" style={{ backgroundColor: "#2F5D9F"}}>
       <Container>
         {/* Bagian logo tidak diubah*/}
         <Navbar.Brand as={Link} to="/" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -17,7 +17,7 @@ const MainNavbar = () => {
             className="d-inline-block align-top"
           />
           {/* Menggunakan style inline untuk memastikan warna teks hitam */}
-          <span style={{ color: "black" }}>Dinas Perhubungan Kota Batu</span>
+          <span style={{ color: "white" }}>Dinas Perhubungan Kota Batu</span>
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -25,17 +25,17 @@ const MainNavbar = () => {
           {/* ms-auto akan mendorong menu ke sisi kanan */}
           <Nav className="ms-auto">
             {/* Mengubah item menu dan warnanya agar sesuai dengan gambar */}
-            <Nav.Link as={Link} to="/" style={{ color: "black" }}>
+            <Nav.Link as={Link} to="/" style={{ color: "white" }}>
               Home
             </Nav.Link>
-            <Nav.Link as={Link} to="/pelaporan" style={{ color: "black" }}>
+            <Nav.Link as={Link} to="/pelaporan" style={{ color: "white" }}>
               Lapor
             </Nav.Link>
             {/* Mengganti "Status" menjadi "Aktivitas" dan link ke /verifikasi */}
-            <Nav.Link as={Link} to="/verifikasi" style={{ color: "black" }}>
+            <Nav.Link as={Link} to="/verifikasi" style={{ color: "white" }}>
               Status
             </Nav.Link>
-            <Nav.Link as={Link} to="/login" style={{ color: "black" }}>
+            <Nav.Link as={Link} to="/login" style={{ color: "white" }}>
               Login
             </Nav.Link>
           </Nav>

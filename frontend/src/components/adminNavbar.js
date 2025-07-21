@@ -5,26 +5,18 @@ import logo from "../images/Logo-dishub.png"; // impor logo
 
 const AdminNavbar = () => {
   return (
-    <Navbar expand="lg" style={{ backgroundColor: "#4e93dc" }}>
+    <Navbar expand="lg" className="shadow-sm" style={{ backgroundColor: "#2F5D9F"}}>
       <Container>
-        
-        {/* Bagian logo tidak diubah*/}
         <Navbar.Brand as={Link} to="/" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <img
-            src={logo}
-            alt="Logo Dishub"
-            width="58"
-            height="45"
-            className="d-inline-block align-top"
-          />
-          {/* Menggunakan style inline untuk memastikan warna teks hitam */}
-          <span style={{ color: "black" }}>Dinas Perhubungan Kota Batu</span>
-        </Navbar.Brand>
-
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto"></Nav>
-          <Nav>
+                  <img
+                    src={logo}
+                    alt="Logo Dishub"
+                    width="58"
+                    height="45"
+                    className="d-inline-block align-top"
+                  />
+                  <span style={{ color: "white" }}>Dinas Perhubungan Kota Batu</span>
+          </Navbar.Brand>
             <NavDropdown
               title={<span style={{ color: "white" }}>Manage</span>}
               id="admin-nav-dropdown"
@@ -36,13 +28,11 @@ const AdminNavbar = () => {
               <NavDropdown.Item as={Link} to="/manage-content">
                 Manage Content
               </NavDropdown.Item>
-              <NavDropdown.Divider />
+               <NavDropdown.Divider />
               <NavDropdown.Item as={Link} to="/logout">
                 Logout
               </NavDropdown.Item>
             </NavDropdown>
-          </Nav>
-        </Navbar.Collapse>
       </Container>
     </Navbar>
   );

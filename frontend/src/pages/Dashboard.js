@@ -28,8 +28,6 @@ const Dashboard = () => {
     }
   };
 
-
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -50,8 +48,11 @@ const Dashboard = () => {
           tanggal: item.tanggal || item.created_at || item.date || new Date().toISOString()
         }));
         
-        setData(processedData);
-        setFilteredData(processedData);
+        // Sort data berdasarkan ID terbesar (descending)
+        const sortedData = processedData.sort((a, b) => b.id - a.id);
+        
+        setData(sortedData);
+        setFilteredData(sortedData);
       } catch (error) {
         setError(
           error.response?.data?.error || "Silahkan Login Terlebih Dahulu"
@@ -83,6 +84,9 @@ const Dashboard = () => {
         formatDate(item.tanggal).toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
+    
+    // Pastikan filtered data tetap terurut berdasarkan ID terbesar
+    results = results.sort((a, b) => b.id - a.id);
     
     setFilteredData(results);
   }, [searchQuery, statusFilter, data]);
@@ -120,25 +124,6 @@ const Dashboard = () => {
     }
   };
 
-  // const getStatusIcon = (status) => {
-  //   switch (status) {
-  //     case "Rejected":
-  //       return "🔴";
-  //     case "Approved":
-  //       return "🟢";
-  //     case "On Hold":
-  //       return "🟡";
-  //     case "On Process":
-  //       return "🔵";
-  //     case "Done":
-  //       return "✅";
-  //     case "Pending":
-  //       return "⏳";
-  //     default:
-  //       return "🟡";
-  //   }
-  // };
-
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
@@ -160,7 +145,7 @@ const Dashboard = () => {
                 <div className="card-body p-5">
                   {/* Header Section */}
                   <div className="header-section mb-4">
-                    <h2 className="page-title" style={{ color: '#2c3e50' }}>Status Laporan Sumbang</h2>
+                    <h2 className="page-title" style={{ color: '#2c3e50' }}>Status Pelapor Sumbang</h2>
                     <p className="page-subtitle text-muted">Sarana Prasarana Untuk Masyarakat Batu Gampang</p>
                   </div>
 
@@ -204,7 +189,6 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-
                   {/* Table Section */}
                   <div className="table-container">
                     <Table className="custom-table">
@@ -240,7 +224,6 @@ const Dashboard = () => {
                               <td className="col-status text-center align-middle">
                                 {item.status && (
                                   <span className={`status-badge ${getStatusClass(item.status)}`}>
-                                    {/* <span className="status-icon">{getStatusIcon(item.status)}</span> */}
                                     {item.status}
                                   </span>
                                 )}
@@ -254,7 +237,7 @@ const Dashboard = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="6" className="text-center text-muted py-5">
+                            <td colSpan="7" className="text-center text-muted py-5">
                               <div>
                                 <i className="fas fa-search mb-2" style={{ fontSize: '2rem', opacity: 0.5 }}></i>
                                 <h5 className="mb-2">
@@ -277,7 +260,6 @@ const Dashboard = () => {
                             </td>
                           </tr>
                         )}
-                    
                       </tbody>
                     </Table>
                   </div>

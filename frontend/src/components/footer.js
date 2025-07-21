@@ -1,6 +1,7 @@
 import React from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import "../css/components/footer.css";
+import logo from "../images/Logo-dishub.png"; // impor logo
 
 const Footer = () => {
   return (
@@ -8,31 +9,17 @@ const Footer = () => {
       <Container>
         <Row className="justify-content-center">
           <Col md={8} className="text-center">
-            {/* Logo Section */}
             <div className="footer-logo mb-4">
-              <div className="logo-circle">
-                <i className="bi bi-circle"></i>
-              </div>
+              <img
+                          src={logo}
+                          alt="Logo Dishub"
+                          width="58"
+                          height="45"
+                          className="d-inline-block align-top"
+                        />
               <h5 className="mt-2 mb-0">Dinas Perhubungan Kota Batu</h5>
             </div>
 
-            {/* Social Media Icons */}
-            <div className="social-media mb-4">
-              <a href="#" className="social-icon me-3" aria-label="Facebook">
-                <i className="bi bi-facebook"></i>
-              </a>
-              <a href="#" className="social-icon me-3" aria-label="Twitter">
-                <i className="bi bi-twitter"></i>
-              </a>
-              <a href="#" className="social-icon me-3" aria-label="LinkedIn">
-                <i className="bi bi-linkedin"></i>
-              </a>
-              <a href="https://www.instagram.com/dishubkotabatu" className="social-icon" aria-label="Instagram">
-                <i className="bi bi-instagram"></i>
-              </a>
-            </div>
-
-            {/* Contact Info */}
             <div className="contact-info mb-4">
               <h6 className="mb-3">Hubungi Kami</h6>
               <div className="contact-details">
@@ -58,7 +45,6 @@ const Footer = () => {
               </div>
             </div>
 
-            {/* Mission Statement */}
             <div className="mission-statement">
               <p className="mb-0">sarana prasarana untuk masyarakat batu gampang.</p>
             </div>

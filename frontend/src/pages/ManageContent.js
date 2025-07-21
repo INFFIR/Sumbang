@@ -10,6 +10,7 @@ import {
   Table,
 } from "react-bootstrap";
 import axios from "axios";
+import "../css/pages/ManageContent.css";
 
 const ManageContent = () => {
   const token = localStorage.getItem("token");
@@ -246,8 +247,10 @@ const ManageContent = () => {
   };
 
   return (
-    <Container className="mt-5">
-      <UsersNavbar />
+  <>
+    <UsersNavbar />
+
+    <Container className="pt-5">
       <h3 className="fw-bold">Manage Content & Service</h3>
 
       {/* Content */}
@@ -267,7 +270,8 @@ const ManageContent = () => {
               </tr>
             </thead>
             <tbody>
-              {contentList.map((item) => {const youtubeEmbedUrl = item.url ? getYoutubeEmbedUrl(item.url) : null;
+              {contentList.map((item) => {
+                const youtubeEmbedUrl = item.url ? getYoutubeEmbedUrl(item.url) : null;
                 const isItemMediaVideoBase64 = typeof item.media === 'string' && (item.media.startsWith("data:video") || item.media.startsWith("AAAA"));
                 const isItemMediaImageBase64 = typeof item.media === 'string' && item.media.startsWith("data:image");
 
@@ -281,8 +285,8 @@ const ManageContent = () => {
                           <video
                             width="100%"
                             controls
-                            onClick={() => handlePreview(item)} // Make video clickable
-                            style={{overflow: "hidden", cursor: "pointer", position: "center",}}
+                            onClick={() => handlePreview(item)}
+                            style={{ overflow: "hidden", cursor: "pointer", position: "center" }}
                           >
                             <source
                               src={item.media.startsWith("AAAA") ? `data:video/mp4;base64,${item.media}` : item.media}
@@ -292,16 +296,15 @@ const ManageContent = () => {
                           </video>
                         ) : (
                           <img
-                            src={isItemMediaImageBase64 ? item.media : `data:image/jpeg;base64,${item.media}`} // Fallback assuming base64 image
+                            src={isItemMediaImageBase64 ? item.media : `data:image/jpeg;base64,${item.media}`}
                             alt="preview"
-                            style={{maxWidth: "100%", objectFit: "cover",  overflow: "hidden", cursor: "pointer", position: "relative"}}
-                            onClick={() => handlePreview(item)} // Make image clickable
+                            style={{ maxWidth: "100%", objectFit: "cover", overflow: "hidden", cursor: "pointer", position: "relative" }}
+                            onClick={() => handlePreview(item)}
                           />
                         )
                       ) : youtubeEmbedUrl ? (
                         <div
-                         // Menyesuaikan lebar dengan kontainer, Mengatur tinggi menjadi 0 untuk mempertahankan rasio aspek, Rasio aspek 16:9 (360 / 640 = 0.5625 atau 56.25%)
-                          style={{ paddingBottom: "56.25%", overflow: "hidden", cursor: "pointer", position: "relative"}}
+                          style={{ paddingBottom: "56.25%", overflow: "hidden", cursor: "pointer", position: "relative" }}
                           onClick={() => handlePreview(item)}
                         >
                           <iframe
@@ -318,8 +321,8 @@ const ManageContent = () => {
                         <video
                           width="100%"
                           controls
-                          onClick={() => handlePreview(item)} // Make video clickable
-                          style={{ paddingBottom: "56.25%", overflow: "hidden", cursor: "pointer", position: "relative"}}
+                          onClick={() => handlePreview(item)}
+                          style={{ paddingBottom: "56.25%", overflow: "hidden", cursor: "pointer", position: "relative" }}
                         >
                           <source src={item.url} type="video/mp4" />
                           Browser tidak mendukung tag video.
@@ -328,8 +331,8 @@ const ManageContent = () => {
                         <img
                           src={item.url}
                           alt="preview"
-                          style={{maxWidth: "100%", objectFit: "cover", cursor: "pointer", position: "relative", overflow: "hidden"}}
-                          onClick={() => handlePreview(item)} // Make image clickable
+                          style={{ maxWidth: "100%", objectFit: "cover", cursor: "pointer", position: "relative", overflow: "hidden" }}
+                          onClick={() => handlePreview(item)}
                         />
                       ) : (
                         "-"
@@ -404,12 +407,11 @@ const ManageContent = () => {
         </Col>
       </Row>
 
-      {/* Modal for Add/Edit Content/Service */}
+      {/* Modal Add/Edit */}
       <Modal show={showModal} onHide={handleClose} centered>
         <Modal.Header closeButton>
           <Modal.Title>
-            {editData ? "Edit" : "Tambah"}{" "}
-            {modalType === "content" ? "Content" : "Service"}
+            {editData ? "Edit" : "Tambah"} {modalType === "content" ? "Content" : "Service"}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
@@ -491,7 +493,7 @@ const ManageContent = () => {
             </video>
           )}
           {previewMedia.type === "youtube" && previewMedia.src && (
-            <div className="embed-responsive embed-responsive-16by9" style={{ position: 'relative', width: '100%', paddingBottom: '56.25%' /* 16:9 Aspect Ratio */ }}>
+            <div className="embed-responsive embed-responsive-16by9" style={{ position: 'relative', width: '100%', paddingBottom: '56.25%' }}>
               <iframe
                 className="embed-responsive-item"
                 src={previewMedia.src}
@@ -509,7 +511,8 @@ const ManageContent = () => {
         </Modal.Body>
       </Modal>
     </Container>
-  );
+  </>
+);
 };
 
 export default ManageContent;

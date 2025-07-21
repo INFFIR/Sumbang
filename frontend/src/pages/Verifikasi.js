@@ -26,7 +26,6 @@ const Verifikasi = () => {
     }
   };
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -47,8 +46,11 @@ const Verifikasi = () => {
           tanggal: item.tanggal || item.created_at || item.date || new Date().toISOString()
         }));
         
-        setData(processedData);
-        setFilteredData(processedData);
+        // Sort data berdasarkan ID terbesar (descending)
+        const sortedData = processedData.sort((a, b) => b.id - a.id);
+        
+        setData(sortedData);
+        setFilteredData(sortedData);
       } catch (error) {
         setError(
           error.response?.data?.error || "Silahkan Login Terlebih Dahulu"
@@ -80,6 +82,9 @@ const Verifikasi = () => {
         formatDate(item.tanggal).toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
+    
+    // Pastikan filtered data tetap terurut berdasarkan ID terbesar
+    results = results.sort((a, b) => b.id - a.id);
     
     setFilteredData(results);
   }, [searchQuery, statusFilter, data]);
@@ -116,25 +121,6 @@ const Verifikasi = () => {
         return "";
     }
   };
-
-  // const getStatusIcon = (status) => {
-  //   switch (status) {
-  //     case "Rejected":
-  //       return "🔴";
-  //     case "Approved":
-  //       return "🟢";
-  //     case "On Hold":
-  //       return "🟡";
-  //     case "On Process":
-  //       return "🔵";
-  //     case "Done":
-  //       return "✅";
-  //     case "Verifikasi":
-  //       return "⏳";
-  //     default:
-  //       return "🟡";
-  //   }
-  // };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -201,7 +187,6 @@ const Verifikasi = () => {
                       </div>
                     </div>
 
-
                   {/* Table Section */}
                   <div className="table-container">
                     <Table className="custom-table">
@@ -226,7 +211,6 @@ const Verifikasi = () => {
                               <td className="col-tanggal text-center align-middle">
                                 {item.tanggal ? (
                                   <div>
-                                    
                                     <span className="date-text">{formatDate(item.tanggal)}</span>
                                     <br />
                                   </div>
@@ -237,7 +221,6 @@ const Verifikasi = () => {
                               <td className="col-status text-center align-middle">
                                 {item.status && (
                                   <span className={`status-badge ${getStatusClass(item.status)}`}>
-                                    {/* <span className="status-icon">{getStatusIcon(item.status)}</span> */}
                                     {item.status}
                                   </span>
                                 )}
@@ -269,7 +252,6 @@ const Verifikasi = () => {
                             </td>
                           </tr>
                         )}
-                    
                       </tbody>
                     </Table>
                   </div>

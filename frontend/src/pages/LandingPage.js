@@ -202,52 +202,62 @@ const LandingPage = () => {
 
     return (
       <section className={`${bgColor} py-5 border-top`} key={`content-${index}`}>
-        <Container>
-          <Row className="align-items-center justify-content-center">
-            {!mediaToRender ? ( // If no media to render, center the text
-              <Col md={8} className="text-center">
-                <h3 className="fw-bold">{content.title}</h3>
-                <p className="mt-4">{content.description}</p>
-                {isFirst && (
-                  <Button variant={isEven ? "secondary" : "light"} onClick={handleLaporClick}>
-                    Lapor Sekarang
-                  </Button>
-                )}
-              </Col>
-            ) : isEven ? (
-              <>
-                <Col md={7} className={textAlign}>
-                  <h3 className="fw-bold">{content.title}</h3>
-                  <p className="mt-4">{content.description}</p>
-                  {isFirst && (
-                    <Button variant="secondary" onClick={handleLaporClick}>
-                      Lapor Sekarang
-                    </Button>
-                  )}
-                </Col>
-                <Col md={5} className="text-center">
-                  {mediaToRender}
-                </Col>
-              </>
-            ) : (
-              <>
-                <Col md={5} className="text-center">
-                  {mediaToRender}
-                </Col>
-                <Col md={7} className={textAlign}>
-                  <h3 className="fw-bold">{content.title}</h3>
-                  <p className="mt-4">{content.description}</p>
-                  {isFirst && (
-                    <Button variant="light" onClick={handleLaporClick}>
-                      Lapor Sekarang
-                    </Button>
-                  )}
-                </Col>
-              </>
+  <Container>
+    <Row className="align-items-center justify-content-center">
+      {!mediaToRender ? (
+        <Col md={8} className="text-center">
+          <h3 className="fw-bold">{content.title}</h3>
+          <p className="mt-4">{content.description}</p>
+          {isFirst && (
+            <Button
+              style={{ backgroundColor: '#EDB44D', borderColor: '#EDB44D', color: '#fff' }}
+              onClick={handleLaporClick}
+            >
+              Lapor Sekarang
+            </Button>
+          )}
+        </Col>
+      ) : isEven ? (
+        <>
+          <Col md={7} className={textAlign}>
+            <h3 className="fw-bold">{content.title}</h3>
+            <p className="mt-4">{content.description}</p>
+            {isFirst && (
+              <Button
+                style={{ backgroundColor: '#EDB44D', borderColor: '#EDB44D', color: '#fff' }}
+                onClick={handleLaporClick}
+              >
+                Lapor Sekarang
+              </Button>
             )}
-          </Row>
-        </Container>
-      </section>
+          </Col>
+          <Col md={5} className="text-center">
+            {mediaToRender}
+          </Col>
+        </>
+      ) : (
+        <>
+          <Col md={5} className="text-center">
+            {mediaToRender}
+          </Col>
+          <Col md={7} className={textAlign}>
+            <h3 className="fw-bold">{content.title}</h3>
+            <p className="mt-4">{content.description}</p>
+            {isFirst && (
+              <Button
+                style={{ backgroundColor: '#EDB44D', borderColor: '#EDB44D', color: '#fff' }}
+                onClick={handleLaporClick}
+              >
+                Lapor Sekarang
+              </Button>
+            )}
+          </Col>
+        </>
+      )}
+    </Row>
+  </Container>
+</section>
+
     );
   };
 

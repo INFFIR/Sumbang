@@ -42,6 +42,25 @@ const Detail = () => {
     return base64 ? `data:image/jpeg;base64,${base64}` : null;
   };
 
+  // Function to format WhatsApp number and create WhatsApp URL
+  const formatWhatsAppNumber = (number) => {
+    if (!number) return null;
+    // Remove any non-numeric characters
+    let cleaned = number.replace(/\D/g, '');
+    // Add country code if not present (assuming Indonesia +62)
+    if (cleaned.startsWith('0')) {
+      cleaned = '62' + cleaned.substring(1);
+    } else if (!cleaned.startsWith('62')) {
+      cleaned = '62' + cleaned;
+    }
+    return cleaned;
+  };
+
+  const getWhatsAppUrl = (number) => {
+    const formattedNumber = formatWhatsAppNumber(number);
+    return formattedNumber ? `https://wa.me/${formattedNumber}` : null;
+  };
+
   const handleUpdateStatus = async (statusValue) => {
     try {
       await axios.post(
@@ -104,7 +123,21 @@ const Detail = () => {
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Nomor WhatsApp</Form.Label>
-              <Form.Control value={data.no_whatsapp} disabled />
+              <div className="d-flex align-items-center">
+                <Form.Control value={data.no_whatsapp} disabled className="me-2" />
+                {data.no_whatsapp && getWhatsAppUrl(data.no_whatsapp) && (
+                  <Button 
+                    variant="success" 
+                    size="sm"
+                    onClick={() => window.open(getWhatsAppUrl(data.no_whatsapp), '_blank')}
+                    className="d-flex align-items-center"
+                    style={{ minWidth: 'auto', whiteSpace: 'nowrap' }}
+                  >
+                    <i className="fab fa-whatsapp me-1"></i>
+                    Chat
+                  </Button>
+                )}
+              </div>
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Permintaan</Form.Label>
