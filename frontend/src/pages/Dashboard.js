@@ -11,6 +11,7 @@ const Dashboard = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+   const [userId, setUserId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -21,49 +22,124 @@ const Dashboard = () => {
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            return date.toLocaleString("id-ID", {day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,});
     } catch (error) {
       console.error('Error formatting date:', error);
       return dateString;
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/verifikasi/data`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        
-        // Process data untuk memastikan tanggal ter-format dengan benar
-        const processedData = response.data.map(item => ({
-          ...item,
-          // Gunakan tanggal dari backend, atau created_at, atau tanggal saat ini sebagai fallback
-          tanggal: item.tanggal || item.created_at || item.date || new Date().toISOString()
-        }));
-        
-        // Sort data berdasarkan ID terbesar (descending)
-        const sortedData = processedData.sort((a, b) => b.id - a.id);
-        
-        setData(sortedData);
-        setFilteredData(sortedData);
-      } catch (error) {
-        setError(
-          error.response?.data?.error || "Silahkan Login Terlebih Dahulu"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchData();
-  }, []);
+useEffect(() => {
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/user`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setUserId(response.data.id);
+    } catch (error) {
+      setError(
+        error.response?.data?.error ||
+          "Terjadi kesalahan saat mengambil data pengguna"
+      );
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/data`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Proses data: format tanggal dan sort berdasarkan ID descending
+      const processedData = response.data.map(item => ({
+        ...item,
+        tanggal: item.tanggal || item.created_at || item.date || new Date().toISOString(),
+      }));
+
+      const sortedData = processedData.sort((a, b) => b.id - a.id);
+
+      setData(sortedData);
+      setFilteredData(sortedData);
+    } catch (error) {
+      setError(
+        error.response?.data?.error || "Silahkan login terlebih dahulu"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchUserData();
+  fetchData();
+}, []);
+useEffect(() => {
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/user`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setUserId(response.data.id);
+    } catch (error) {
+      setError(
+        error.response?.data?.error ||
+          "Terjadi kesalahan saat mengambil data pengguna"
+      );
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/data`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Proses data: format tanggal dan sort berdasarkan ID descending
+      const processedData = response.data.map(item => ({
+        ...item,
+        tanggal: item.tanggal || item.created_at || item.date || new Date().toISOString(),
+      }));
+
+      const sortedData = processedData.sort((a, b) => b.id - a.id);
+
+      setData(sortedData);
+      setFilteredData(sortedData);
+    } catch (error) {
+      setError(
+        error.response?.data?.error || "Silahkan login terlebih dahulu"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchUserData();
+  fetchData();
+}, []);
 
   useEffect(() => {
     let results = data;
@@ -199,6 +275,7 @@ const Dashboard = () => {
                           <th className="col-permintaan">Permintaan</th>
                           <th className="col-lokasi">Lokasi</th>
                           <th className="col-tanggal">Tanggal</th>
+                          <th className="col-tanggal">Keterangan</th>
                           <th className="col-status">Status</th>
                           <th className="col-detail">Detail</th>
                         </tr>
@@ -221,6 +298,7 @@ const Dashboard = () => {
                                   <span></span>
                                 )}
                               </td>
+                              <td>{item.keterangan || "-"}</td> {/* Tambahan */}
                               <td className="col-status text-center align-middle">
                                 {item.status && (
                                   <span className={`status-badge ${getStatusClass(item.status)}`}>

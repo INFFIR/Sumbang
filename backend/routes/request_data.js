@@ -9,7 +9,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.get("/data", authenticateToken, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, nama, no_hp, lokasi FROM request_data WHERE status != 'Deleted'"
+      "SELECT id, nama, no_hp, lokasi, status, date, keterangan FROM request_data WHERE status != 'Deleted'"
     );
     res.json(rows);
   } catch (error) {
@@ -17,6 +17,7 @@ router.get("/data", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 router.get("/user", authenticateToken, async (req, res) => {
   try {
@@ -45,18 +46,19 @@ router.post(
       permintaan,
       detailPermintaan,
       lokasi,
+      keterangan,
     } = req.body;
     const fileSurat = req.files["fileSurat"]
       ? req.files["fileSurat"][0].buffer
       : null;
     const foto = req.files["foto"] ? req.files["foto"][0].buffer : null;
 
-    const date = moment().tz("Asia/Jakarta").format("HH:mm, DD MMMM YYYY");
+    const date = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
 
     try {
       await pool.query(
         `INSERT INTO request_data (
-        nama, alamat, no_whatsapp, no_hp, permintaan, detail_permintaan, lokasi, surat, foto, status, date
+        nama, alamat, no_whatsapp, no_hp, permintaan, detail_permintaan, lokasi, surat, foto, status, date, keterangan
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Verifikasi', ?)`,
         [
           nama,
@@ -69,14 +71,32 @@ router.post(
           fileSurat,
           foto,
           date,
+          keterangan,
         ]
       );
       res.status(200).json({ message: "Data submitted successfully" });
     } catch (error) {
-      console.error(error);
+      console.error(error); 
       res.status(500).json({ error: "Server error" });
-    }
+    }   
   }
 );
+
+// router.put("/update-keterangan/:id", authenticateToken, async (req, res) => {
+//   const { id } = req.params;
+//   const { keterangan } = req.body;
+
+//   try {
+//     await pool.query(
+//       "UPDATE request_data SET keterangan = ? WHERE id = ?",
+//       [keterangan, id]
+//     );
+//     res.status(200).json({ message: "Keterangan updated successfully" });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
 
 module.exports = router;

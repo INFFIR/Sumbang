@@ -5,15 +5,18 @@ const authenticateToken = require("../src/authMiddleware");
 
 const router = express.Router();
 
+// Format timestamp standar
+const getTimestamp = () => moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
+
 // GET Detail
 router.get("/detail/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
 
   try {
     const [rows] = await pool.query(
-      `SELECT nama, alamat, no_hp, no_whatsapp, permintaan, detail_permintaan, lokasi, surat, status, foto 
-       FROM request_data 
-       WHERE id = ? AND status != 'Deleted'`, // filter agar data 'Deleted' tidak muncul
+      `SELECT nama, alamat, no_hp, no_whatsapp, permintaan, detail_permintaan, lokasi, surat, status, foto, keterangan
+       FROM request_data
+       WHERE id = ? AND status != 'Deleted'`,
       [id]
     );
 
@@ -23,12 +26,8 @@ router.get("/detail/:id", authenticateToken, async (req, res) => {
 
     const requestData = rows[0];
 
-    const suratBase64 = requestData.surat
-      ? requestData.surat.toString("base64")
-      : null;
-    const fotoBase64 = requestData.foto
-      ? requestData.foto.toString("base64")
-      : null;
+    const suratBase64 = requestData.surat ? requestData.surat.toString("base64") : null;
+    const fotoBase64 = requestData.foto ? requestData.foto.toString("base64") : null;
 
     res.json({
       nama: requestData.nama,
@@ -41,6 +40,7 @@ router.get("/detail/:id", authenticateToken, async (req, res) => {
       surat: suratBase64,
       status: requestData.status,
       foto: fotoBase64,
+      keterangan: requestData.keterangan,
     });
   } catch (error) {
     console.error(error);
@@ -52,7 +52,7 @@ router.get("/detail/:id", authenticateToken, async (req, res) => {
 router.post("/update-status/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
-  const timestamp = moment().tz("Asia/Jakarta").format("HH:mm, DD MMMM YYYY");
+  const timestamp = getTimestamp();
 
   const query = "UPDATE request_data SET status = ?, date = ? WHERE id = ?";
 
@@ -68,7 +68,7 @@ router.post("/update-status/:id", authenticateToken, async (req, res) => {
 // POST Soft Delete
 router.post("/delete/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
-  const timestamp = moment().tz("Asia/Jakarta").format("HH:mm, DD MMMM YYYY");
+  const timestamp = getTimestamp();
 
   try {
     const [result] = await pool.query(
@@ -83,6 +83,29 @@ router.post("/delete/:id", authenticateToken, async (req, res) => {
     res.status(200).json({ message: "Data berhasil dihapus (soft delete)" });
   } catch (error) {
     console.error("Error saat soft delete:", error);
+    res.status(500).json({ error: "Terjadi kesalahan pada server" });
+  }
+});
+
+// POST Update Keterangan
+router.post("/update-keterangan/:id", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { keterangan } = req.body;
+  const timestamp = getTimestamp();
+
+  try {
+    const [result] = await pool.query(
+      "UPDATE request_data SET keterangan = ?, date = ? WHERE id = ?",
+      [keterangan, timestamp, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Data tidak ditemukan" });
+    }
+
+    res.status(200).json({ message: "Keterangan berhasil diperbarui" });
+  } catch (error) {
+    console.error("Error saat memperbarui keterangan:", error);
     res.status(500).json({ error: "Terjadi kesalahan pada server" });
   }
 });

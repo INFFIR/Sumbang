@@ -19,14 +19,10 @@ const Verifikasi = () => {
   // Format tanggal
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    try {
+    try {     
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      return date.toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
+      return date.toLocaleString("id-ID", {day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,});
     } catch (error) {
       console.error("Error formatting date:", error);
       return dateString;
@@ -233,6 +229,7 @@ const Verifikasi = () => {
                           <th>Permintaan</th>
                           <th>Lokasi</th>
                           <th>Tanggal</th>
+                          <th>Keterangan</th>
                           <th>Status</th>
                         </tr>
                       </thead>
@@ -244,9 +241,8 @@ const Verifikasi = () => {
                               <td>{item.nama}</td>
                               <td>{item.permintaan}</td>
                               <td>{item.lokasi}</td>
-                              <td className="text-center align-middle">
-                                {formatDate(item.tanggal)}
-                              </td>
+                              <td className="text-center align-middle">{formatDate(item.tanggal)}</td>
+                              <td>{item.keterangan || "-"}</td> {/* Tambahan */}
                               <td className="text-center align-middle">
                                 <span className={`status-badge ${getStatusClass(item.status)}`}>
                                   {item.status}
@@ -256,7 +252,7 @@ const Verifikasi = () => {
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="6" className="text-center text-muted py-5">
+                            <td colSpan="7" className="text-center text-muted py-5">
                               Tidak ada data yang ditemukan
                             </td>
                           </tr>

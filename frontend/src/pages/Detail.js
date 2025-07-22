@@ -14,8 +14,17 @@ const Detail = () => {
   const [showOnHoldModal, setShowOnHoldModal] = useState(false);
   const [showOnProcessModal, setShowOnProcessModal] = useState(false);
   const [showDoneModal, setShowDoneModal] = useState(false);
+  const [keterangan, setKeterangan] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    if (data?.keterangan) {
+      setKeterangan(data.keterangan);
+    }
+  }, [data]);
+
 
   useEffect(() => {
     if (!token) return;
@@ -74,6 +83,24 @@ const Detail = () => {
       console.error("Error updating status:", err);
     }
   };
+
+  const handleSaveKeterangan = async () => {
+  setSaving(true);
+  try {
+    await axios.post(
+      `${process.env.REACT_APP_API_URL}/api/update-keterangan/${id}`,
+      { keterangan },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setData((prev) => ({ ...prev, keterangan }));
+    alert("Keterangan berhasil disimpan.");
+  } catch (error) {
+    console.error("Gagal menyimpan keterangan:", error);
+    alert("Terjadi kesalahan saat menyimpan keterangan.");
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleDelete = async () => {
     try {
@@ -188,7 +215,26 @@ const Detail = () => {
             </div>
           </Col>
         </Row>
-
+          <Form.Group className="mb-3 d-flex align-items-end gap-2">
+            <div style={{ flex: 1 }}>
+              <Form.Label>Keterangan</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                value={keterangan}
+                onChange={(e) => setKeterangan(e.target.value)}
+                placeholder={keterangan ? "" : "Tulis keterangan di sini..."}
+              />
+            </div>
+            <Button
+              variant="success"
+              onClick={handleSaveKeterangan}
+              disabled={saving}
+              style={{ height: "38px", marginBottom: "4px" }}
+            >
+              {saving ? "Menyimpan..." : "Simpan"}
+            </Button>
+          </Form.Group>
         {/* TOMBOL AKSI */}
         <div className="d-flex justify-content-start gap-2 mt-4 mb-4">
           <Button
