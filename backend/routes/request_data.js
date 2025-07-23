@@ -59,7 +59,7 @@ router.post(
       await pool.query(
         `INSERT INTO request_data (
         nama, alamat, no_whatsapp, no_hp, permintaan, detail_permintaan, lokasi, surat, foto, status, date, keterangan
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Verifikasi', ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Verifikasi', ?, ?)`,
         [
           nama,
           alamat,
