@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Container, Table, Form } from "react-bootstrap";
+import { Container, Table, Form, Button } from "react-bootstrap";
 import MainNavbar from "../components/mainNavbar";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import "../css/pages/Verifikasi.css";
 
 const Verifikasi = () => {
@@ -22,11 +23,27 @@ const Verifikasi = () => {
     try {     
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      return date.toLocaleString("id-ID", {day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,});
+      return date.toLocaleString("id-ID", {
+        day: "2-digit", 
+        month: "2-digit", 
+        year: "numeric", 
+        hour: "2-digit", 
+        minute: "2-digit", 
+        second: "2-digit", 
+        hour12: false,
+      });
     } catch (error) {
       console.error("Error formatting date:", error);
       return dateString;
     }
+  };
+
+  // Handle detail view
+  const handleDetailClick = (item) => {
+    // Implementasi untuk menampilkan detail
+    console.log("Detail item:", item);
+    // Bisa redirect ke halaman detail atau buka modal
+    // window.location.href = `/detail/${item.id}`;
   };
 
   useEffect(() => {
@@ -223,14 +240,14 @@ const Verifikasi = () => {
                   <div className="table-container">
                     <Table className="custom-table">
                       <thead>
-                        <tr>
-                          <th>ID</th>
+                        <tr style={{ backgroundColor: "#6c7b8a", color: "white" }}>
+                          <th className="text-center">ID</th>
                           <th>Nama Lengkap</th>
                           <th>Permintaan</th>
                           <th>Lokasi</th>
-                          <th>Tanggal</th>
-                          <th>Keterangan</th>
-                          <th>Status</th>
+                          <th className="text-center">Tanggal</th>
+                          <th className="text-center">Status</th>
+                          <th className="text-center">Detail</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -238,15 +255,19 @@ const Verifikasi = () => {
                           currentItems.map((item) => (
                             <tr key={item.id}>
                               <td className="text-center align-middle">{item.id}</td>
-                              <td>{item.nama}</td>
-                              <td>{item.permintaan}</td>
-                              <td>{item.lokasi}</td>
+                              <td className="align-middle">{item.nama}</td>
+                              <td className="align-middle">{item.permintaan}</td>
+                              <td className="align-middle">{item.lokasi}</td>
                               <td className="text-center align-middle">{formatDate(item.tanggal)}</td>
-                              <td>{item.keterangan || "-"}</td> {/* Tambahan */}
                               <td className="text-center align-middle">
                                 <span className={`status-badge ${getStatusClass(item.status)}`}>
                                   {item.status}
                                 </span>
+                              </td>
+                              <td className="col-detail text-center align-middle">
+                                <Link to={`/riwayat-laporan/${item.id}`}>
+                                  <Button variant="info">Lihat</Button>
+                                </Link>
                               </td>
                             </tr>
                           ))

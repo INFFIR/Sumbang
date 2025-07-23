@@ -1,0 +1,128 @@
+/* RiwayatLaporan.css */
+
+.progress-container {
+  padding: 20px 0;
+}
+
+.progress-steps {
+  margin: 0 20px;
+  position: relative;
+}
+
+.progress-step {
+  flex: 1;
+  position: relative;
+}
+
+.progress-circle {
+  transition: all 0.3s ease;
+  margin-bottom: 8px;
+}
+
+.progress-circle:hover {
+  transform: scale(1.1);
+}
+
+.progress-line {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  height: 3px;
+  background-color: #e9ecef;
+  z-index: 1;
+  border-radius: 2px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #28a745, #20c997);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+/* Status badge colors */
+.status-verifikasi {
+  background-color: #ffc107 !important;
+}
+
+.status-approved {
+  background-color: #28a745 !important;
+}
+
+.status-rejected {
+  background-color: #dc3545 !important;
+}
+
+.status-on-hold {
+  background-color: #6c757d !important;
+}
+
+.status-on-process {
+  background-color: #17a2b8 !important;
+}
+
+.status-done {
+  background-color: #28a745 !important;
+}
+
+/* Table styling */
+.table-hover tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.table th {
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* Card styling */
+.card {
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .progress-steps {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  
+  .progress-step {
+    flex-direction: row;
+    margin-bottom: 20px;
+    align-items: center !important;
+  }
+  
+  .progress-step .progress-circle {
+    margin-right: 15px;
+    margin-bottom: 0;
+  }
+  
+  .progress-line {
+    display: none;
+  }
+  
+  .progress-container {
+    padding: 10px 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .table-responsive {
+    font-size: 14px;
+  }
+  
+  .progress-circle {
+    width: 35px !important;
+    height: 35px !important;
+    font-size: 12px !important;
+  }
+}
