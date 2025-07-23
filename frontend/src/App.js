@@ -10,6 +10,7 @@ import Detail from "./pages/Detail";
 import ManageUser from "./pages/ManageUser";
 import Logout from "./pages/Logout";
 import ManageContent from "./pages/ManageContent";
+import RiwayatLaporan from "./pages/RiwayanLaporan";
 import "./App.css";
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
             <Route path="/manage-user" element={<ManageUser />} />
             <Route path="/manage-content" element={<ManageContent />} />
             <Route path="/logout" element={<Logout />} />
+            <Route path="/riwayat-laporan/:id" element={<RiwayatLaporan />} />
           </Routes>
         </div>
         <Footer />
