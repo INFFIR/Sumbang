@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Container, Table, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import AdminNavbar from "../components/adminNavbar";
+import UsersAdminNavbar from "../components/usersAdminNavbar";
 import { Button } from "react-bootstrap"; 
 import axios from "axios";
 import "../css/pages/Dashboard.css";
+
 
 const Dashboard = () => {
   const [data, setData] = useState([]);
@@ -30,6 +32,7 @@ const Dashboard = () => {
   };
 
 
+  
 useEffect(() => {
   const fetchUserData = async () => {
     try {
@@ -205,7 +208,7 @@ useEffect(() => {
 
   return (
     <>
-      <AdminNavbar />
+      {userId === 1 ? <AdminNavbar /> : <UsersAdminNavbar/>}
       <div style={{ backgroundColor: '#e9ecef', minHeight: '100vh', paddingTop: '40px', paddingBottom: '40px' }}>
         <Container>
           <div className="row justify-content-center">
@@ -298,7 +301,7 @@ useEffect(() => {
                                   <span></span>
                                 )}
                               </td>
-                              <td>{item.keterangan || "-"}</td> {/* Tambahan */}
+                              <td>{item.keterangan || "-"}</td>
                               <td className="col-status text-center align-middle">
                                 {item.status && (
                                   <span className={`status-badge ${getStatusClass(item.status)}`}>
