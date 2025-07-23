@@ -242,7 +242,7 @@ const Verifikasi = () => {
                               <td>{item.permintaan}</td>
                               <td>{item.lokasi}</td>
                               <td className="text-center align-middle">{formatDate(item.tanggal)}</td>
-                              <td>{item.keterangan || "-"}</td> {/* Tambahan */}
+                              <td>{item.keterangan || "-"}</td>
                               <td className="text-center align-middle">
                                 <span className={`status-badge ${getStatusClass(item.status)}`}>
                                   {item.status}

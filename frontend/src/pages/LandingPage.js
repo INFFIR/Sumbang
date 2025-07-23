@@ -262,7 +262,7 @@ const LandingPage = () => {
   };
 
   const renderServiceSlider = () => (
-    <section className="py-5 text-center bg-white border-top">
+    <section className="py-5 text-center bg-light border-top">
       <h4 className="mb-4 fw-semibold">Layanan</h4>
       <Container>
         <Carousel indicators={false} interval={null}>
@@ -297,12 +297,21 @@ const LandingPage = () => {
 
   const sections = [];
   const maxIndex = Math.max(contentList.length, 1);
+
   for (let i = 0; i < maxIndex; i++) {
     if (contentList[i]) {
-      sections.push(renderContentCard(contentList[i], i));
+      sections.push(
+        React.cloneElement(renderContentCard(contentList[i], i), {
+          key: `content-${i}`,
+        })
+      );
     }
     if (i === 0 && serviceList.length > 0) {
-      sections.push(renderServiceSlider());
+      sections.push(
+        React.cloneElement(renderServiceSlider(), {
+          key: `services`,
+        })
+      );
     }
   }
 

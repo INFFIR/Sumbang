@@ -17,10 +17,12 @@ const AdminNavbar = () => {
                   />
                   <span style={{ color: "white" }}>Dinas Perhubungan Kota Batu</span>
           </Navbar.Brand>
+          <Nav className="ms-auto">
             <NavDropdown
               title={<span style={{ color: "white" }}>Manage</span>}
               id="admin-nav-dropdown"
             >
+              
               <NavDropdown.Item as={Link} to="/manage-user">
                 Manage User
               </NavDropdown.Item>
@@ -33,6 +35,7 @@ const AdminNavbar = () => {
                 Logout
               </NavDropdown.Item>
             </NavDropdown>
+            </Nav>
       </Container>
     </Navbar>
   );
