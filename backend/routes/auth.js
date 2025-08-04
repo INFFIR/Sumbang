@@ -15,9 +15,7 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    const [rows] = await pool.query("SELECT * FROM users WHERE username = ?", [
-      username,
-    ]);
+    const [rows] = await pool.query("SELECT * FROM users WHERE username = ?", [username]);
     if (rows.length === 0) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
@@ -29,17 +27,56 @@ router.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username },
+      { id: user.id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.json({ token });
+    res.json({ token, role: user.role }); // Kirim role ke frontend
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
   }
 });
+
+
+// Tambahkan ini sebelum module.exports = router;
+
+router.post("/register", async (req, res) => {
+  const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: "Semua field harus diisi." });
+  }
+
+  try {
+    // Cek apakah email atau username sudah terdaftar
+    const [existingUser] = await pool.query(
+      "SELECT * FROM users WHERE username = ? OR email = ?",
+      [username, email]
+    );
+
+    if (existingUser.length > 0) {
+      return res.status(400).json({ error: "Username atau email sudah digunakan." });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Simpan user baru
+    await pool.query(
+      "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)",
+      [username, email, hashedPassword, "user"]
+    );
+
+
+    res.status(201).json({ message: "Registrasi berhasil." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Terjadi kesalahan server." });
+  }
+});
+
 
 
 module.exports = router;

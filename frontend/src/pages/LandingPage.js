@@ -73,8 +73,15 @@ const LandingPage = () => {
   }, [serviceList]);
 
   const handleLaporClick = () => {
-    navigate("/pelaporan");
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      navigate("/pelaporan");
+    } else {
+      navigate("/login");
+    }
   };
+
 
   // Function to handle media preview
   const handlePreview = (item) => {

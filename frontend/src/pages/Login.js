@@ -37,7 +37,7 @@ const Login = () => {
         );
         const { token } = response.data;
         localStorage.setItem("token", token);
-        navigate("/dashboard");
+        navigate("/");
       } catch (error) {
         setError(
           error.response?.data?.error || "Silahkan Login Terlebih Dahulu"
@@ -53,7 +53,7 @@ const Login = () => {
       <Container className="mt-5">
         <Row className="justify-content-center">
           <Col md={4}>
-            <h2 className="text-center mb-4 fw-bold">Login Admin</h2>
+            <h2 className="text-center mb-4 fw-bold">Login Sumbang</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form noValidate validated={validated} onSubmit={handleSubmit}>
               <Form.Group controlId="formUsername">
@@ -86,6 +86,18 @@ const Login = () => {
                 Login
               </Button>
             </Form>
+
+            {/* ✅ Tombol Sign Up di bawah Login */}
+            <div className="text-center mt-3">
+              <span>Belum punya akun? </span>
+              <Button
+                variant="link"
+                onClick={() => navigate("/signup")}
+                className="p-0 align-baseline"
+              >
+                Sign Up
+              </Button>
+            </div>
           </Col>
         </Row>
       </Container>

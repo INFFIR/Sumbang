@@ -1,43 +1,51 @@
-import React from "react";
-import { Navbar, Nav, Container } from "react-bootstrap";
-import { Link } from "react-router-dom";
-import logo from "../images/Logo-dishub.png"; // impor logo
+import React, { useEffect, useState } from "react";
+import { Navbar, Nav, Container, Dropdown } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
+import logo from "../images/Logo-dishub.png";
 
 const MainNavbar = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    navigate("/login");
+  };
+
   return (
-    <Navbar expand="lg" className="shadow-sm" style={{ backgroundColor: "#2F5D9F"}}>
+    <Navbar expand="lg" className="shadow-sm" style={{ backgroundColor: "#2F5D9F" }}>
       <Container>
-        {/* Bagian logo tidak diubah*/}
         <Navbar.Brand as={Link} to="/" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <img
-            src={logo}
-            alt="Logo Dishub"
-            width="58"
-            height="45"
-            className="d-inline-block align-top"
-          />
-          {/* Menggunakan style inline untuk memastikan warna teks hitam */}
+          <img src={logo} alt="Logo Dishub" width="58" height="45" className="d-inline-block align-top" />
           <span style={{ color: "white" }}>Dinas Perhubungan Kota Batu</span>
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          {/* ms-auto akan mendorong menu ke sisi kanan */}
           <Nav className="ms-auto">
-            {/* Mengubah item menu dan warnanya agar sesuai dengan gambar */}
-            <Nav.Link as={Link} to="/" style={{ color: "white" }}>
-              Home
-            </Nav.Link>
-            <Nav.Link as={Link} to="/pelaporan" style={{ color: "white" }}>
-              Lapor
-            </Nav.Link>
-            {/* Mengganti "Status" menjadi "Aktivitas" dan link ke /verifikasi */}
-            <Nav.Link as={Link} to="/verifikasi" style={{ color: "white" }}>
-              Status
-            </Nav.Link>
-            <Nav.Link as={Link} to="/login" style={{ color: "white" }}>
-              Login
-            </Nav.Link>
+            <Nav.Link as={Link} to="/" style={{ color: "white" }}>Home</Nav.Link>
+            <Nav.Link as={Link} to="/pelaporan" style={{ color: "white" }}>Lapor</Nav.Link>
+            <Nav.Link as={Link} to="/verifikasi" style={{ color: "white" }}>Status</Nav.Link>
+
+            {!isLoggedIn ? (
+              <Nav.Link as={Link} to="/login" style={{ color: "white" }}>Login</Nav.Link>
+            ) : (
+              <Dropdown align="end">
+                <Dropdown.Toggle variant="link" style={{ color: "white", textDecoration: "none" }}>
+                  Profile
+                </Dropdown.Toggle>
+
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            )}
           </Nav>
         </Navbar.Collapse>
       </Container>

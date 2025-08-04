@@ -6,6 +6,7 @@ import Footer from "./components/footer";
 import Verifikasi from "./pages/Verifikasi";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
 import Detail from "./pages/Detail";
 import ManageUser from "./pages/ManageUser";
 import Logout from "./pages/Logout";
@@ -23,6 +24,7 @@ function App() {
             <Route path="/pelaporan" element={<Pelaporan />} />
             <Route path="/verifikasi" element={<Verifikasi />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/detail/:id" element={<Detail />} />
             <Route path="/manage-user" element={<ManageUser />} />
