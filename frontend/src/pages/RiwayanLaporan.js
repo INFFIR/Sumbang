@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Container, Table, Card, Row, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import MainNavbar from "../components/mainNavbar";
-import { FaCheckCircle } from "react-icons/fa";
+import { FaCheckCircle, FaTimes } from "react-icons/fa";
 import axios from "axios";
 import "../css/pages/RiwayatLaporan.css";
 
@@ -19,7 +19,7 @@ const RiwayatLaporanDetail = () => {
     { key: "verifikasi", label: "Verifikasi", color: "#ffc107" },
     { key: "persetujuan", label: "Persetujuan", color: "#28a745" },
     { key: "pengerjaan", label: "Pengerjaan", color: "#17a2b8" },
-    { key: "selesai", label: "Selesai", color: "	#27ae60" }
+    { key: "selesai", label: "Selesai", color: "	#4669deff" }
   ];
 
   const stepStatusMap = {
@@ -34,7 +34,7 @@ const RiwayatLaporanDetail = () => {
     rejected: "#dc3545",
     on_hold: "#6c757d",
     on_process: "#17a2b8",
-    done: "	#27ae60",
+    done: "	#1347f3ff",
     verifikasi: "#ffc107"
   };
 
@@ -76,13 +76,38 @@ const RiwayatLaporanDetail = () => {
 
   const isStatusCompleted = (stepIndex, currentStatusIndex) => {
     if (currentStatus.toLowerCase() === "rejected") {
-      return stepIndex <= 2;
+      return stepIndex <= 1; // Hanya verifikasi dan persetujuan yang completed untuk rejected
     }
     return stepIndex <= currentStatusIndex;
   };
 
   const isStatusActive = (stepIndex, currentStatusIndex) => {
+    if (currentStatus.toLowerCase() === "rejected") {
+      return false; // Tidak ada yang aktif jika rejected
+    }
     return stepIndex === currentStatusIndex;
+  };
+
+  // Fungsi untuk menentukan apakah step ini rejected
+  const isStatusRejected = (stepKey) => {
+    if (stepKey === "persetujuan" && currentStatus.toLowerCase() === "rejected") {
+      return true;
+    }
+    return false;
+  };
+
+  // Fungsi untuk mendapatkan ikon yang tepat untuk setiap step
+  const getStepIcon = (stepKey, stepIndex, currentStatusIndex) => {
+    const isCompleted = isStatusCompleted(stepIndex, currentStatusIndex);
+    const isRejected = isStatusRejected(stepKey);
+
+    if (isRejected) {
+      return <FaTimes color="white" size={24} />;
+    } else if (isCompleted) {
+      return <FaCheckCircle color="white" size={24} />;
+    } else {
+      return stepIndex + 1;
+    }
   };
 
   useEffect(() => {
@@ -137,6 +162,7 @@ const RiwayatLaporanDetail = () => {
                 {statusSteps.map((step, index) => {
                   const isCompleted = isStatusCompleted(index, currentStatusIndex);
                   const isActive = isStatusActive(index, currentStatusIndex);
+                  const isRejected = isStatusRejected(step.key);
 
                   return (
                     <Col key={step.key} xs={3} className="text-center">
@@ -146,15 +172,29 @@ const RiwayatLaporanDetail = () => {
                           width: 50,
                           height: 50,
                           margin: "auto",
-                          backgroundColor: getStatusColor(step.key),
+                          backgroundColor: isRejected ? "#dc3545" : getStatusColor(step.key),
                           display: "flex",
                           justifyContent: "center",
                           alignItems: "center",
+                          color: isCompleted || isRejected ? "white" : "#666",
+                          fontWeight: "bold",
+                          fontSize: "16px"
                         }}
                       >
-                        {isCompleted ? <FaCheckCircle color="white" size={24} /> : index + 1}
+                        {getStepIcon(step.key, index, currentStatusIndex)}
                       </div>
-                      <p className="mt-2">{step.label}</p>
+                      <p className="mt-2" style={{ 
+                        color: isRejected ? "#dc3545" : "#2c3e50",
+                        fontWeight: isRejected ? "bold" : "normal"
+                      }}>
+                        {step.label}
+                        {isRejected && (
+                          <>
+                            <br />
+                            <small style={{ color: "#dc3545" }}>(Ditolak)</small>
+                          </>
+                        )}
+                      </p>
                     </Col>
                   );
                 })}

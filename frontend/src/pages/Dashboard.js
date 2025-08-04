@@ -144,31 +144,38 @@ useEffect(() => {
   fetchData();
 }, []);
 
-  useEffect(() => {
-    let results = data;
-    
-    // Filter berdasarkan status
-    if (statusFilter !== "all") {
-      results = results.filter(item => 
-        item.status.toLowerCase() === statusFilter.toLowerCase()
-      );
-    }
-    
-    // Filter berdasarkan search query (fokus pada nama lengkap)
-    if (searchQuery) {
-      results = results.filter(item =>
-        item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.permintaan.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.lokasi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        formatDate(item.tanggal).toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    
-    // Pastikan filtered data tetap terurut berdasarkan ID terbesar
-    results = results.sort((a, b) => b.id - a.id);
-    
-    setFilteredData(results);
-  }, [searchQuery, statusFilter, data]);
+useEffect(() => {
+  const query = searchQuery.toLowerCase();
+
+  const safeIncludes = (field, query) => {
+    return (field || "").toLowerCase().includes(query);
+  };
+
+  let results = data;
+
+  // Filter berdasarkan status
+  if (statusFilter !== "all") {
+    results = results.filter(item =>
+      (item.status || "").toLowerCase() === statusFilter.toLowerCase()
+    );
+  }
+
+  // Filter berdasarkan search query
+  if (searchQuery) {
+    results = results.filter(item =>
+      safeIncludes(item.nama, query) ||
+      safeIncludes(item.permintaan, query) ||
+      safeIncludes(item.lokasi, query) ||
+      safeIncludes(formatDate(item.tanggal), query)
+    );
+  }
+
+  // Pastikan filtered data tetap terurut berdasarkan ID terbesar
+  results = results.sort((a, b) => b.id - a.id);
+
+  setFilteredData(results);
+}, [searchQuery, statusFilter, data]);
+
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
