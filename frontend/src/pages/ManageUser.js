@@ -81,8 +81,10 @@ const ManageUser = () => {
     const form = event.currentTarget;
     const newUser = {
       username: form.username.value,
+      email: form.email.value,
       password: form.password.value,
     };
+
     axios
       .post(API_URL, newUser, {
         headers: {
@@ -100,7 +102,7 @@ const ManageUser = () => {
         }
       })
       .catch((error) => {
-        setErrorMessage("An error occurred while adding the user.");
+        setErrorMessage("Gagal menambahkan user.");
         setShowErrorModal(true);
         console.error("Error adding user:", error);
       });
@@ -111,8 +113,10 @@ const ManageUser = () => {
     const form = event.currentTarget;
     const updatedUser = {
       username: form.username.value,
+      email: form.email.value,
       password: form.password.value,
     };
+
     axios
       .put(`${API_URL}/${currentUser.id}`, updatedUser, {
         headers: {
@@ -122,14 +126,14 @@ const ManageUser = () => {
       .then((response) => {
         setUsers(
           users.map((user) =>
-            user.id === currentUser.id ? response.data : user
+            user.id === currentUser.id ? { ...user, ...response.data } : user
           )
         );
         handleCloseEditModal();
         setShowEditSuccessModal(true);
       })
       .catch((error) => {
-        setErrorMessage("An error occurred while updating the user.");
+        setErrorMessage("Gagal mengubah user.");
         setShowEditErrorModal(true);
         console.error("Error updating user:", error);
       });
@@ -148,17 +152,17 @@ const ManageUser = () => {
         setShowSuccessModal(true);
       })
       .catch((error) => {
-        setErrorMessage("An error occurred while deleting the user.");
+        setErrorMessage("Gagal menghapus user.");
         setShowErrorModal(true);
         console.error("Error deleting user:", error);
       });
   };
 
   const toggleModalPasswordVisibility = (modalType) => {
-    setShowPasswordModal({
-      ...showPasswordModal,
-      [modalType]: !showPasswordModal[modalType],
-    });
+    setShowPasswordModal((prev) => ({
+      ...prev,
+      [modalType]: !prev[modalType],
+    }));
   };
 
   return (
@@ -176,6 +180,8 @@ const ManageUser = () => {
             <tr>
               <th>ID</th>
               <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -184,6 +190,8 @@ const ManageUser = () => {
               <tr key={user.id}>
                 <td>{user.id}</td>
                 <td>{user.username}</td>
+                <td>{user.email}</td>
+                <td>{user.role}</td>
                 <td>
                   <Button
                     variant="warning"
@@ -215,19 +223,17 @@ const ManageUser = () => {
             <Form onSubmit={handleAddUser}>
               <Form.Group controlId="formUsername">
                 <Form.Label>Username</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter username"
-                  name="username"
-                  required
-                />
+                <Form.Control type="text" name="username" required />
+              </Form.Group>
+              <Form.Group controlId="formEmail" className="mt-3">
+                <Form.Label>Email</Form.Label>
+                <Form.Control type="email" name="email" required />
               </Form.Group>
               <Form.Group controlId="formPassword" className="mt-3">
                 <Form.Label>Password</Form.Label>
                 <div className="d-flex align-items-center">
                   <Form.Control
                     type={showPasswordModal.add ? "text" : "password"}
-                    placeholder="Enter password"
                     name="password"
                     required
                   />
@@ -245,11 +251,7 @@ const ManageUser = () => {
                 </div>
               </Form.Group>
               <div className="d-flex justify-content-end mt-3">
-                <Button
-                  variant="secondary"
-                  onClick={handleCloseAddModal}
-                  className="me-2"
-                >
+                <Button variant="secondary" onClick={handleCloseAddModal} className="me-2">
                   Cancel
                 </Button>
                 <Button variant="primary" type="submit">
@@ -258,32 +260,6 @@ const ManageUser = () => {
               </div>
             </Form>
           </Modal.Body>
-        </Modal>
-
-        {/* Success Modal */}
-        <Modal show={showSuccessModal} onHide={handleCloseSuccessModal}>
-          <Modal.Header closeButton>
-            <Modal.Title>Success</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>Operation was successful!</Modal.Body>
-          <Modal.Footer>
-            <Button variant="primary" onClick={handleCloseSuccessModal}>
-              OK
-            </Button>
-          </Modal.Footer>
-        </Modal>
-
-        {/* Error Modal */}
-        <Modal show={showErrorModal} onHide={handleCloseErrorModal}>
-          <Modal.Header closeButton>
-            <Modal.Title>Error</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>{errorMessage}</Modal.Body>
-          <Modal.Footer>
-            <Button variant="danger" onClick={handleCloseErrorModal}>
-              Close
-            </Button>
-          </Modal.Footer>
         </Modal>
 
         {/* Edit User Modal */}
@@ -300,6 +276,15 @@ const ManageUser = () => {
                     type="text"
                     defaultValue={currentUser.username}
                     name="username"
+                    required
+                  />
+                </Form.Group>
+                <Form.Group controlId="formEmail" className="mt-3">
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control
+                    type="email"
+                    defaultValue={currentUser.email}
+                    name="email"
                     required
                   />
                 </Form.Group>
@@ -325,11 +310,7 @@ const ManageUser = () => {
                   </div>
                 </Form.Group>
                 <div className="d-flex justify-content-end mt-3">
-                  <Button
-                    variant="secondary"
-                    onClick={handleCloseEditModal}
-                    className="me-2"
-                  >
+                  <Button variant="secondary" onClick={handleCloseEditModal} className="me-2">
                     Cancel
                   </Button>
                   <Button variant="primary" type="submit">
@@ -341,7 +322,31 @@ const ManageUser = () => {
           </Modal.Body>
         </Modal>
 
-        {/* Delete Confirm Modal */}
+        {/* Other modals (Success, Error, Delete Confirmation) */}
+        <Modal show={showSuccessModal} onHide={handleCloseSuccessModal}>
+          <Modal.Header closeButton>
+            <Modal.Title>Success</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>Operation was successful!</Modal.Body>
+          <Modal.Footer>
+            <Button variant="primary" onClick={handleCloseSuccessModal}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        <Modal show={showErrorModal} onHide={handleCloseErrorModal}>
+          <Modal.Header closeButton>
+            <Modal.Title>Error</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>{errorMessage}</Modal.Body>
+          <Modal.Footer>
+            <Button variant="danger" onClick={handleCloseErrorModal}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
         <Modal
           show={showDeleteConfirmModal}
           onHide={handleCloseDeleteConfirmModal}
@@ -362,14 +367,11 @@ const ManageUser = () => {
           </Modal.Footer>
         </Modal>
 
-        {/* Edit Success Modal */}
         <Modal show={showEditSuccessModal} onHide={handleCloseEditSuccessModal}>
           <Modal.Header closeButton>
             <Modal.Title>Success</Modal.Title>
           </Modal.Header>
-          <Modal.Body>
-            Username and/or password has been successfully updated!
-          </Modal.Body>
+          <Modal.Body>User updated successfully!</Modal.Body>
           <Modal.Footer>
             <Button variant="primary" onClick={handleCloseEditSuccessModal}>
               OK
@@ -377,7 +379,6 @@ const ManageUser = () => {
           </Modal.Footer>
         </Modal>
 
-        {/* Edit Error Modal */}
         <Modal show={showEditErrorModal} onHide={handleCloseEditErrorModal}>
           <Modal.Header closeButton>
             <Modal.Title>Error</Modal.Title>

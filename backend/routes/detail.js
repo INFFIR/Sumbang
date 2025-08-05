@@ -1,7 +1,7 @@
 const express = require("express");
 const pool = require("../src/db");
 const moment = require("moment-timezone");
-const authenticateToken = require("../src/authMiddleware");
+const { authenticateToken, authorizeRole }  = require("../src/authMiddleware");
 
 const router = express.Router();
 

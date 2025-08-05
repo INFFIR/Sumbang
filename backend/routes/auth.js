@@ -32,7 +32,8 @@ router.post("/login", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.json({ token, role: user.role }); // Kirim role ke frontend
+    // res.json({ token, role: user.role }); // Kirim role ke frontend
+    res.json({ token });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
@@ -66,7 +67,7 @@ router.post("/register", async (req, res) => {
     // Simpan user baru
     await pool.query(
       "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)",
-      [username, email, hashedPassword, "user"]
+      [username, email, hashedPassword, "User"]
     );
 
 
@@ -79,4 +80,4 @@ router.post("/register", async (req, res) => {
 
 
 
-module.exports = router;
+module.exports = router;exports = router;

@@ -35,9 +35,20 @@ const Login = () => {
             password,
           }
         );
-        const { token } = response.data;
+
+        const { token, role } = response.data;
+
         localStorage.setItem("token", token);
-        navigate("/");
+        localStorage.setItem("role", role);
+
+        if (role === "Admin") {
+          navigate("/dashboard");
+        } else if (role === "User") {
+          navigate("/pelaporan");
+        } else {
+          navigate("/");
+        }
+
       } catch (error) {
         setError(
           error.response?.data?.error || "Silahkan Login Terlebih Dahulu"

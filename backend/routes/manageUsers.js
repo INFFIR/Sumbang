@@ -2,7 +2,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const pool = require("../src/db");
-const authenticateToken = require("../src/authMiddleware");
+const { authenticateToken, authorizeRole }  = require("../src/authMiddleware");
 
 const router = express.Router();
 const saltRounds = 10;
@@ -13,9 +13,10 @@ const generateUserId = () => {
   return `5${paddedDigits}`;
 };
 
+// GET: ambil semua user dengan kolom lengkap
 router.get("/manage-users", authenticateToken, async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT id, username, password FROM users");
+    const [rows] = await pool.query("SELECT id, username, email, role FROM users");
     res.json(rows);
   } catch (error) {
     console.error(error);
@@ -23,29 +24,34 @@ router.get("/manage-users", authenticateToken, async (req, res) => {
   }
 });
 
+// POST: tambah user baru dengan email dan role
 router.post("/manage-users", authenticateToken, async (req, res) => {
-  const { username, password } = req.body;
+  const { username, email, password, role } = req.body;
+
+  if (!username || !email || !password || !role) {
+    return res.status(400).json({ error: "Semua field (username, email, password, role) harus diisi." });
+  }
 
   try {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-
     const userId = generateUserId();
 
     const [result] = await pool.query(
-      "INSERT INTO users (id, username, password) VALUES (?, ?, ?)",
-      [userId, username, hashedPassword]
+      "INSERT INTO users (id, username, email, password, role) VALUES (?, ?, ?, ?, ?)",
+      [userId, username, email, hashedPassword, role]
     );
 
-    res.status(201).json({ id: userId, username, password: hashedPassword });
+    res.status(201).json({ id: userId, username, email, role });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
   }
 });
 
+// PUT: update data user termasuk email dan role
 router.put("/manage-users/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
-  const { username, password } = req.body;
+  const { username, email, password, role } = req.body;
 
   try {
     let hashedPassword = password;
@@ -54,18 +60,21 @@ router.put("/manage-users/:id", authenticateToken, async (req, res) => {
     }
 
     const [result] = await pool.query(
-      "UPDATE users SET username = ?, password = ? WHERE id = ?",
-      [username, hashedPassword, id]
+      "UPDATE users SET username = ?, email = ?, password = ?, role = ? WHERE id = ?",
+      [username, email, hashedPassword, role, id]
     );
+
     if (result.affectedRows === 0)
       return res.status(404).json({ error: "User not found" });
-    res.json({ id, username, password: hashedPassword });
+
+    res.json({ id, username, email, role });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
   }
 });
 
+// DELETE: hapus user
 router.delete("/manage-users/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {

@@ -1,11 +1,17 @@
 const express = require("express");
 const pool = require("../src/db");
-const authenticateToken = require("../src/authMiddleware");
+const { authenticateToken, authorizeRole }  = require("../src/authMiddleware");
 const moment = require("moment-timezone");
 const multer = require("multer");
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
+
+router.get("/manage-users",
+  authenticateToken,
+  authorizeRole("Admin"), // hanya Admin boleh akses
+  async (req, res) => { /* ... */ }
+);
 
 // --- GET All Content (Public) ---
 router.get("/manage/content", async (req, res) => {

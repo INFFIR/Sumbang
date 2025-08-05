@@ -2,7 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const moment = require("moment-timezone");
 const pool = require("../src/db");
-const authenticateToken = require("../src/authMiddleware");
+const { authenticateToken, authorizeRole }  = require("../src/authMiddleware");
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
