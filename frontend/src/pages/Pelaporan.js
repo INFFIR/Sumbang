@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Form, Button, Container, Row, Col, Modal } from "react-bootstrap";
 import MainNavbar from "../components/mainNavbar";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const formatWhatsappNumber = (number) => {
@@ -23,7 +22,6 @@ const formatWhatsappNumber = (number) => {
 };
 
 const Pelaporan = () => {
-  const navigate = useNavigate();
   const [validated, setValidated] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -84,23 +82,19 @@ const Pelaporan = () => {
   };
 
   const handleConfirmSubmit = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
     setLoading(true);
     setErrorMessage("");
-
+    
     try {
+      // Validasi environment variable
       if (!process.env.REACT_APP_API_URL) {
         throw new Error("API URL tidak ditemukan. Pastikan REACT_APP_API_URL sudah diset.");
       }
 
       const formattedNoWhatsapp = formatWhatsappNumber(form.noWhatsapp);
       const formData = new FormData();
-
+      
+      // Append semua field form ke FormData
       formData.append('nama', form.nama);
       formData.append('alamat', form.alamat);
       formData.append('noHp', form.noHp);
@@ -108,42 +102,52 @@ const Pelaporan = () => {
       formData.append('permintaan', form.permintaan);
       formData.append('detailPermintaan', form.detailPermintaan);
       formData.append('lokasi', form.lokasi);
-
+      
       if (form.fileSurat) {
         formData.append('fileSurat', form.fileSurat);
       }
+      
       if (form.foto) {
         formData.append('foto', form.foto);
       }
 
+      console.log("Mengirim data ke:", `${process.env.REACT_APP_API_URL}/api/submit`);
+      
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/submit`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}` // Tambahkan token di header
           },
-          timeout: 30000,
+          timeout: 30000, // 30 detik timeout
         }
       );
 
+      console.log("Response:", response.data);
+      
       handleCloseConfirm();
       handleShowSuccess();
+      
+      // Reset form setelah berhasil
       resetForm();
 
     } catch (error) {
       console.error("Error submitting form:", error);
-
+      
       let errorMsg = "Terjadi kesalahan saat mengirim laporan.";
+      
       if (error.response) {
+        // Server merespons dengan status error
         errorMsg = error.response.data?.message || `Server error: ${error.response.status}`;
       } else if (error.request) {
+        // Request dibuat tapi tidak ada response
         errorMsg = "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.";
       } else if (error.message) {
+        // Error lainnya
         errorMsg = error.message;
       }
-
+      
       setErrorMessage(errorMsg);
       handleCloseConfirm();
     } finally {
