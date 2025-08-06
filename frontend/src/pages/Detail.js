@@ -1,3 +1,5 @@
+//Detail.js
+
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
 import { useParams } from "react-router-dom";
@@ -16,6 +18,11 @@ const Detail = () => {
   const [showDoneModal, setShowDoneModal] = useState(false);
   const [keterangan, setKeterangan] = useState("");
   const [saving, setSaving] = useState(false);
+  
+  // New states for photo upload
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const token = localStorage.getItem("token");
 
@@ -24,7 +31,6 @@ const Detail = () => {
       setKeterangan(data.keterangan);
     }
   }, [data]);
-
 
   useEffect(() => {
     if (!token) return;
@@ -70,6 +76,51 @@ const Detail = () => {
     return formattedNumber ? `https://wa.me/${formattedNumber}` : null;
   };
 
+  // Handle photo selection
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedPhoto(file);
+      const reader = new FileReader();
+      reader.onload = (e) => setPhotoPreview(e.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle Done with photo upload
+  const handleDoneWithPhoto = async () => {
+    if (!selectedPhoto) {
+      alert("Silakan pilih foto terlebih dahulu sebelum menandai sebagai Done.");
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("foto_selesai", selectedPhoto);
+
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/update-status-with-photo/${id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      setData((prev) => ({ ...prev, status: "Done" }));
+      handleClose();
+      alert("Status berhasil diubah menjadi Done dan foto telah diupload.");
+    } catch (err) {
+      console.error("Error updating status with photo:", err);
+      alert("Terjadi kesalahan saat mengupload foto dan mengubah status.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const handleUpdateStatus = async (statusValue) => {
     try {
       await axios.post(
@@ -85,22 +136,22 @@ const Detail = () => {
   };
 
   const handleSaveKeterangan = async () => {
-  setSaving(true);
-  try {
-    await axios.post(
-      `${process.env.REACT_APP_API_URL}/api/update-keterangan/${id}`,
-      { keterangan },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setData((prev) => ({ ...prev, keterangan }));
-    alert("Keterangan berhasil disimpan.");
-  } catch (error) {
-    console.error("Gagal menyimpan keterangan:", error);
-    alert("Terjadi kesalahan saat menyimpan keterangan.");
-  } finally {
-    setSaving(false);
-  }
-};
+    setSaving(true);
+    try {
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/update-keterangan/${id}`,
+        { keterangan },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setData((prev) => ({ ...prev, keterangan }));
+      alert("Keterangan berhasil disimpan.");
+    } catch (error) {
+      console.error("Gagal menyimpan keterangan:", error);
+      alert("Terjadi kesalahan saat menyimpan keterangan.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleDelete = async () => {
     try {
@@ -122,6 +173,9 @@ const Detail = () => {
     setShowOnHoldModal(false);
     setShowOnProcessModal(false);
     setShowDoneModal(false);
+    // Reset photo states when closing modal
+    setSelectedPhoto(null);
+    setPhotoPreview(null);
   };
 
   if (!data) return <div className="text-center mt-5">Loading...</div>;
@@ -148,7 +202,7 @@ const Detail = () => {
               <Form.Label>Nomor Telpon</Form.Label>
               <Form.Control value={data.no_hp} disabled />
             </Form.Group>
-           <Form.Group className="mb-3">
+            <Form.Group className="mb-3">
               <Form.Label>Nomor WhatsApp</Form.Label>
               {data.no_whatsapp && getWhatsAppUrl(data.no_whatsapp) ? (
                 <div>
@@ -198,6 +252,21 @@ const Detail = () => {
               <Form.Label>Status</Form.Label>
               <Form.Control value={data.status} disabled />
             </Form.Group>
+
+            {/* Display completion photo if exists */}
+            {data.foto_selesai && (
+              <Form.Group className="mb-3">
+                <Form.Label>Foto Penyelesaian</Form.Label>
+                <div>
+                  <img
+                    src={getImageUrl(data.foto_selesai)}
+                    alt="Foto Penyelesaian"
+                    className="img-fluid"
+                    style={{ maxHeight: "300px", objectFit: "contain" }}
+                  />
+                </div>
+              </Form.Group>
+            )}
           </Col>
 
           <Col md={4} className="d-flex align-items-start justify-content-center">
@@ -215,30 +284,32 @@ const Detail = () => {
             </div>
           </Col>
         </Row>
-          <Form.Group className="mb-3 d-flex align-items-end gap-2">
-            <div style={{ flex: 1 }}>
-              <Form.Label>Keterangan</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={2}
-                value={keterangan}
-                onChange={(e) => setKeterangan(e.target.value)}
-                placeholder={keterangan ? "" : "Tulis keterangan di sini..."}
-              />
-            </div>
-            <Button
-              variant="success"
-              onClick={handleSaveKeterangan}
-              disabled={saving}
-              style={{ height: "38px", marginBottom: "4px" }}
-            >
-              {saving ? "Menyimpan..." : "Simpan"}
-            </Button>
-          </Form.Group>
+        
+        <Form.Group className="mb-3 d-flex align-items-end gap-2">
+          <div style={{ flex: 1 }}>
+            <Form.Label>Keterangan</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={2}
+              value={keterangan}
+              onChange={(e) => setKeterangan(e.target.value)}
+              placeholder={keterangan ? "" : "Tulis keterangan di sini..."}
+            />
+          </div>
+          <Button
+            variant="success"
+            onClick={handleSaveKeterangan}
+            disabled={saving}
+            style={{ height: "38px", marginBottom: "4px" }}
+          >
+            {saving ? "Menyimpan..." : "Simpan"}
+          </Button>
+        </Form.Group>
+
         {/* TOMBOL AKSI */}
         <div className="d-flex justify-content-start gap-2 mt-4 mb-4">
           <Button
-            style={{ backgroundColor: "#C0392B" }} // kuning (warning)
+            style={{ backgroundColor: "#C0392B" }}
             onClick={() => setShowDeleteModal(true)}
           >
             Hapus Data
@@ -247,13 +318,13 @@ const Detail = () => {
           {data.status === "Approved" && (
             <>
               <Button
-                style={{ backgroundColor: "#7F8C8D"}} // abu (secondary)
+                style={{ backgroundColor: "#7F8C8D" }}
                 onClick={() => setShowOnHoldModal(true)}
               >
                 On Hold
               </Button>
               <Button
-                style={{ backgroundColor: "#2980B9" }} // biru muda (info)
+                style={{ backgroundColor: "#2980B9" }}
                 onClick={() => setShowOnProcessModal(true)}
               >
                 On Process
@@ -263,7 +334,7 @@ const Detail = () => {
 
           {data.status === "On Process" && (
             <Button
-              style={{ backgroundColor: "#191987ff"}} // hijau (success)
+              style={{ backgroundColor: "#191987ff" }}
               onClick={() => setShowDoneModal(true)}
             >
               Done
@@ -272,7 +343,7 @@ const Detail = () => {
 
           {data.status === "On Hold" && (
             <Button
-              style={{ backgroundColor: "#2980B9" }} // biru muda (info)
+              style={{ backgroundColor: "#2980B9" }}
               onClick={() => setShowOnProcessModal(true)}
             >
               On Process
@@ -282,7 +353,7 @@ const Detail = () => {
           {["Rejected", "Approved", "On Process", "On Hold", "Done"].includes(data.status) === false && (
             <>
               <Button
-                style={{ backgroundColor: "#E74C3C" }} // merah (danger)
+                style={{ backgroundColor: "#E74C3C" }}
                 onClick={() => {
                   setModalType("Rejected");
                   setShowModal(true);
@@ -291,7 +362,7 @@ const Detail = () => {
                 Rejected
               </Button>
               <Button
-                style={{ backgroundColor: "#27AE60" }} // hijau (success)
+                style={{ backgroundColor: "#27AE60" }}
                 onClick={() => {
                   setModalType("Approved");
                   setShowModal(true);
@@ -305,97 +376,126 @@ const Detail = () => {
       </Container>
 
       {/* Modal Approve/Reject */}
-        <Modal show={showModal} onHide={handleClose} centered>
-          <Modal.Body className="text-center">
-            <p>
-              Apakah anda yakin ingin mengubah status menjadi{" "}
-              <strong>{modalType}</strong>?
-            </p>
-            <Button variant="secondary" onClick={handleClose} className="me-2">
+      <Modal show={showModal} onHide={handleClose} centered>
+        <Modal.Body className="text-center">
+          <p>
+            Apakah anda yakin ingin mengubah status menjadi{" "}
+            <strong>{modalType}</strong>?
+          </p>
+          <Button variant="secondary" onClick={handleClose} className="me-2">
+            Batal
+          </Button>
+          <Button
+            style={{ backgroundColor: "#27AE60", color: "#fff" }}
+            onClick={() => handleUpdateStatus(modalType)}
+          >
+            OK
+          </Button>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal Delete */}
+      <Modal show={showDeleteModal} onHide={handleClose} centered>
+        <Modal.Body className="text-center">
+          <p>Apakah anda yakin ingin menghapus data ini?</p>
+          <Button variant="secondary" onClick={handleClose} className="me-2">
+            Batal
+          </Button>
+          <Button
+            style={{ backgroundColor: "#27AE60", color: "#fff" }}
+            onClick={handleDelete}
+          >
+            OK
+          </Button>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal On Hold */}
+      <Modal show={showOnHoldModal} onHide={handleClose} centered>
+        <Modal.Body className="text-center">
+          <p>
+            Apakah anda yakin ingin menandai laporan ini sebagai{" "}
+            <strong>On Hold</strong>?
+          </p>
+          <Button variant="secondary" onClick={handleClose} className="me-2">
+            Batal
+          </Button>
+          <Button
+            style={{ backgroundColor: "#27AE60", color: "#fff" }}
+            onClick={() => handleUpdateStatus("On Hold")}
+          >
+            OK
+          </Button>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal On Process */}
+      <Modal show={showOnProcessModal} onHide={handleClose} centered>
+        <Modal.Body className="text-center">
+          <p>
+            Apakah anda yakin ingin menandai laporan ini sebagai{" "}
+            <strong>On Process</strong>?
+          </p>
+          <Button variant="secondary" onClick={handleClose} className="me-2">
+            Batal
+          </Button>
+          <Button
+            style={{ backgroundColor: "#27AE60", color: "#fff" }}
+            onClick={() => handleUpdateStatus("On Process")}
+          >
+            OK
+          </Button>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal Done with Photo Upload */}
+      <Modal show={showDoneModal} onHide={handleClose} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Upload Foto Penyelesaian</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="mb-3">
+            Silakan upload foto sebagai bukti penyelesaian sebelum menandai laporan sebagai{" "}
+            <strong>Done</strong>.
+          </p>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Pilih Foto</Form.Label>
+            <Form.Control
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoSelect}
+            />
+          </Form.Group>
+
+          {photoPreview && (
+            <div className="mb-3">
+              <Form.Label>Preview Foto:</Form.Label>
+              <div>
+                <img
+                  src={photoPreview}
+                  alt="Preview"
+                  className="img-fluid"
+                  style={{ maxHeight: "200px", objectFit: "contain" }}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="d-flex justify-content-end gap-2">
+            <Button variant="secondary" onClick={handleClose}>
               Batal
             </Button>
             <Button
               style={{ backgroundColor: "#27AE60", color: "#fff" }}
-              onClick={() => handleUpdateStatus(modalType)}
+              onClick={handleDoneWithPhoto}
+              disabled={!selectedPhoto || uploadingPhoto}
             >
-              OK
+              {uploadingPhoto ? "Mengupload..." : "Upload & Done"}
             </Button>
-          </Modal.Body>
-        </Modal>
-
-        {/* Modal Delete */}
-        <Modal show={showDeleteModal} onHide={handleClose} centered>
-          <Modal.Body className="text-center">
-            <p>Apakah anda yakin ingin menghapus data ini?</p>
-            <Button variant="secondary" onClick={handleClose} className="me-2">
-              Batal
-            </Button>
-            <Button
-              style={{ backgroundColor: "#27AE60", color: "#fff" }}
-              onClick={handleDelete}
-            >
-              OK
-            </Button>
-          </Modal.Body>
-        </Modal>
-
-        {/* Modal On Hold */}
-        <Modal show={showOnHoldModal} onHide={handleClose} centered>
-          <Modal.Body className="text-center">
-            <p>
-              Apakah anda yakin ingin menandai laporan ini sebagai{" "}
-              <strong>On Hold</strong>?
-            </p>
-            <Button variant="secondary" onClick={handleClose} className="me-2">
-              Batal
-            </Button>
-            <Button
-              style={{ backgroundColor: "#27AE60", color: "#fff" }}
-              onClick={() => handleUpdateStatus("On Hold")}
-            >
-              OK
-            </Button>
-          </Modal.Body>
-        </Modal>
-
-        {/* Modal On Process */}
-        <Modal show={showOnProcessModal} onHide={handleClose} centered>
-          <Modal.Body className="text-center">
-            <p>
-              Apakah anda yakin ingin menandai laporan ini sebagai{" "}
-              <strong>On Process</strong>?
-            </p>
-            <Button variant="secondary" onClick={handleClose} className="me-2">
-              Batal
-            </Button>
-            <Button
-              style={{ backgroundColor: "#27AE60", color: "#fff" }}
-              onClick={() => handleUpdateStatus("On Process")}
-            >
-              OK
-            </Button>
-          </Modal.Body>
-        </Modal>
-
-        {/* Modal Done */}
-        <Modal show={showDoneModal} onHide={handleClose} centered>
-          <Modal.Body className="text-center">
-            <p>
-              Apakah anda yakin ingin menandai laporan ini sebagai{" "}
-              <strong>Done</strong>?
-            </p>
-            <Button variant="secondary" onClick={handleClose} className="me-2">
-              Batal
-            </Button>
-            <Button
-              style={{ backgroundColor: "#27AE60", color: "#fff" }}
-              onClick={() => handleUpdateStatus("Done")}
-            >
-              OK
-            </Button>
-          </Modal.Body>
-        </Modal>
-
+          </div>
+        </Modal.Body>
+      </Modal>
     </>
   );
 };

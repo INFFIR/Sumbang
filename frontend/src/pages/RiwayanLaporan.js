@@ -1,3 +1,5 @@
+//Riwayat laporan
+
 import React, { useEffect, useState } from "react";
 import { Container, Table, Card, Row, Col } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
@@ -36,6 +38,11 @@ const RiwayatLaporanDetail = () => {
     on_process: "#17a2b8",
     done: "	#1347f3ff",
     verifikasi: "#ffc107"
+  };
+
+  // Function to convert base64 image to displayable URL (same as Detail.js)
+  const getImageUrl = (base64) => {
+    return base64 ? `data:image/jpeg;base64,${base64}` : null;
   };
 
   const formatDate = (dateString) => {
@@ -201,6 +208,45 @@ const RiwayatLaporanDetail = () => {
               </Row>
             </Card.Body>
           </Card>
+
+          {/* Display completion photo if status is Done and photo exists */}
+          {laporanData?.status?.toLowerCase() === 'done' && laporanData?.foto_selesai && (
+            <Card className="shadow-sm mb-4" style={{ borderRadius: "12px" }}>
+              <Card.Body className="p-4">
+                <h5 className="mb-4" style={{ color: "#2c3e50" }}>Foto Penyelesaian</h5>
+                <div className="text-center">
+                  <img
+                    src={getImageUrl(laporanData.foto_selesai)}
+                    alt="Foto Penyelesaian"
+                    className="img-fluid rounded shadow"
+                    style={{ 
+                      maxHeight: "400px", 
+                      objectFit: "contain",
+                      border: "2px solid #e9ecef"
+                    }}
+                  />
+                  <p className="text-muted mt-2 mb-0">
+                    <small>Foto bukti penyelesaian pekerjaan</small>
+                  </p>
+                </div>
+              </Card.Body>
+            </Card>
+          )}
+
+          {/* Display keterangan if exists */}
+          {laporanData?.keterangan && (
+            <Card className="shadow-sm mb-4" style={{ borderRadius: "12px" }}>
+              <Card.Body className="p-4">
+                <h5 className="mb-3" style={{ color: "#2c3e50" }}>Keterangan</h5>
+                <div 
+                  className="p-3 rounded" 
+                  style={{ backgroundColor: "#f8f9fa", border: "1px solid #e9ecef" }}
+                >
+                  <p className="mb-0 text-muted">{laporanData.keterangan}</p>
+                </div>
+              </Card.Body>
+            </Card>
+          )}
 
           <Card className="shadow-sm" style={{ borderRadius: "12px" }}>
             <Card.Body className="p-4">

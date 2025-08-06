@@ -1,9 +1,15 @@
+//backend detail.js
+
 const express = require("express");
+const multer = require("multer");
 const pool = require("../src/db");
 const moment = require("moment-timezone");
 const { authenticateToken, authorizeRole }  = require("../src/authMiddleware");
 
 const router = express.Router();
+
+// Setup multer for file uploads
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Format timestamp standar
 const getTimestamp = () => moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
@@ -14,7 +20,7 @@ router.get("/detail/:id", authenticateToken, async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      `SELECT nama, alamat, no_hp, no_whatsapp, permintaan, detail_permintaan, lokasi, surat, status, foto, keterangan
+      `SELECT nama, alamat, no_hp, no_whatsapp, permintaan, detail_permintaan, lokasi, surat, status, foto, keterangan, foto_selesai
        FROM request_data
        WHERE id = ? AND status != 'Deleted'`,
       [id]
@@ -28,6 +34,7 @@ router.get("/detail/:id", authenticateToken, async (req, res) => {
 
     const suratBase64 = requestData.surat ? requestData.surat.toString("base64") : null;
     const fotoBase64 = requestData.foto ? requestData.foto.toString("base64") : null;
+    const fotoSelesaiBase64 = requestData.foto_selesai ? requestData.foto_selesai.toString("base64") : null;
 
     res.json({
       nama: requestData.nama,
@@ -41,6 +48,7 @@ router.get("/detail/:id", authenticateToken, async (req, res) => {
       status: requestData.status,
       foto: fotoBase64,
       keterangan: requestData.keterangan,
+      foto_selesai: fotoSelesaiBase64,
     });
   } catch (error) {
     console.error(error);
@@ -62,6 +70,33 @@ router.post("/update-status/:id", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Error updating status:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// POST Update Status with Photo Upload (specifically for Done status)
+router.post("/update-status-with-photo/:id", authenticateToken, upload.single("foto_selesai"), async (req, res) => {
+  const { id } = req.params;
+  const timestamp = getTimestamp();
+  const fotoSelesai = req.file ? req.file.buffer : null;
+
+  if (!fotoSelesai) {
+    return res.status(400).json({ error: "Foto penyelesaian harus diupload" });
+  }
+
+  try {
+    const [result] = await pool.query(
+      "UPDATE request_data SET status = ?, foto_selesai = ?, date = ? WHERE id = ?",
+      ["Done", fotoSelesai, timestamp, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Data tidak ditemukan" });
+    }
+
+    res.status(200).json({ message: "Status berhasil diubah menjadi Done dan foto telah diupload" });
+  } catch (error) {
+    console.error("Error updating status with photo:", error);
+    res.status(500).json({ error: "Terjadi kesalahan pada server" });
   }
 });
 
