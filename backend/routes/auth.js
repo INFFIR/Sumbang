@@ -34,7 +34,7 @@ router.post("/login", async (req, res) => {
     );
 
     // res.json({ token, role: user.role }); // Kirim role ke frontend
-    res.json({ token });
+    res.json({ token, role: user.role });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });

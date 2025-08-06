@@ -48,7 +48,7 @@ const Dashboard = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/user`,
+          `${process.env.REACT_APP_API_URL}/api/userAdmin`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
