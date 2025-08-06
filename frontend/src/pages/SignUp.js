@@ -17,52 +17,37 @@ const Signup = () => {
     }, [navigate]);
 
 
- const handleSubmit = async (event) => {
-  const form = event.currentTarget;
-  if (form.checkValidity() === false) {
-    event.preventDefault();
-    event.stopPropagation();
-  } else {
-    event.preventDefault();
-    const username = form.username.value;
-    const email = form.email.value;
-    const password = form.password.value;
+  const handleSubmit = async (event) => {
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.preventDefault();
+      event.stopPropagation();
+    } else {
+      event.preventDefault();
+      const username = form.username.value;
+      const email = form.email.value;
+      const password = form.password.value;
 
-    // Validasi password: minimal 6 karakter dan ada angka
-    const passwordRegex = /^(?=.*[0-9]).{6,}$/;
-    if (!passwordRegex.test(password)) {
-      setError("Password harus minimal 6 karakter dan mengandung angka.");
-      return;
+      try {
+        const response = await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/register`,
+          {
+            username,
+            email,
+            password,
+          }
+        );
+        const { token } = response.data;
+        localStorage.setItem("token", token);
+        navigate("/login");
+      } catch (error) {
+        setError(
+          error.response?.data?.error || "Silahkan signup terlebih dahulu"
+        );
+      }
     }
-
-    // Validasi email: harus @gmail.com
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
-    if (!emailRegex.test(email)) {
-      setError("Email harus menggunakan @gmail.com");
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/register`,
-        {
-          username,
-          email,
-          password,
-        }
-      );
-      const { token } = response.data;
-      localStorage.setItem("token", token);
-      navigate("/login");
-    } catch (error) {
-      setError(
-        error.response?.data?.error || "Silahkan signup terlebih dahulu"
-      );
-    }
-  }
-  setValidated(true);
-};
-
+    setValidated(true);
+  };
 
   return (
     <>

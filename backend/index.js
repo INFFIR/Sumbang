@@ -10,6 +10,7 @@ const manageUsersRoutes = require("./routes/manageUsers");
 const manageContentRoutes = require("./routes/manageContent");
 const detailRoute = require("./routes/detail");
 const laporanRoutes = require("./routes/riwayatLaporan");
+const emailRoutes = require("./routes/emailRoutes");
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use("/api", manageUsersRoutes);
 app.use("/api", manageContentRoutes);
 app.use('/api', detailRoute);
 app.use("/api", laporanRoutes);
+app.use("/api", emailRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
