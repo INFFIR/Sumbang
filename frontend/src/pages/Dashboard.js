@@ -13,7 +13,7 @@ const Dashboard = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-   const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -34,39 +34,41 @@ const Dashboard = () => {
 
   
 useEffect(() => {
+  const token = localStorage.getItem("token");
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
   const fetchUserData = async () => {
     try {
-      const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/user`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        `${process.env.REACT_APP_API_URL}/api/userAdmin`,
+        config
       );
       setUserId(response.data.id);
     } catch (error) {
-      setError(
-        error.response?.data?.error ||
+      if (error.response?.status === 403) {
+        setError("Akses ditolak: hanya Admin yang dapat mengakses");
+      } else if (error.response?.status === 404) {
+        setError("Pengguna tidak ditemukan");
+      } else {
+        setError(
+          error.response?.data?.error ||
           "Terjadi kesalahan saat mengambil data pengguna"
-      );
+        );
+      }
     }
   };
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem("token");
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/data`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        config
       );
 
-      // Proses data: format tanggal dan sort berdasarkan ID descending
       const processedData = response.data.map(item => ({
         ...item,
         tanggal: item.tanggal || item.created_at || item.date || new Date().toISOString(),
@@ -77,9 +79,13 @@ useEffect(() => {
       setData(sortedData);
       setFilteredData(sortedData);
     } catch (error) {
-      setError(
-        error.response?.data?.error || "Silahkan login terlebih dahulu"
-      );
+      if (error.response?.status === 403) {
+        setError("Anda tidak memiliki akses untuk melihat data ini.");
+      } else {
+        setError(
+          error.response?.data?.error || "Silakan login terlebih dahulu"
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -88,61 +94,7 @@ useEffect(() => {
   fetchUserData();
   fetchData();
 }, []);
-useEffect(() => {
-  const fetchUserData = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/user`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setUserId(response.data.id);
-    } catch (error) {
-      setError(
-        error.response?.data?.error ||
-          "Terjadi kesalahan saat mengambil data pengguna"
-      );
-    }
-  };
 
-  const fetchData = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/data`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      // Proses data: format tanggal dan sort berdasarkan ID descending
-      const processedData = response.data.map(item => ({
-        ...item,
-        tanggal: item.tanggal || item.created_at || item.date || new Date().toISOString(),
-      }));
-
-      const sortedData = processedData.sort((a, b) => b.id - a.id);
-
-      setData(sortedData);
-      setFilteredData(sortedData);
-    } catch (error) {
-      setError(
-        error.response?.data?.error || "Silahkan login terlebih dahulu"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchUserData();
-  fetchData();
-}, []);
 
 useEffect(() => {
   const query = searchQuery.toLowerCase();

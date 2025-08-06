@@ -13,6 +13,8 @@ import Logout from "./pages/Logout";
 import ManageContent from "./pages/ManageContent";
 import RiwayatLaporan from "./pages/RiwayanLaporan";
 import "./App.css";
+import AdminCheck from "./components/AdminCheck";
+import AksesDitolak from "./pages/AksesDitolak";
 
 function App() {
   return (
@@ -25,10 +27,11 @@ function App() {
             <Route path="/verifikasi" element={<Verifikasi />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/detail/:id" element={<Detail />} />
-            <Route path="/manage-user" element={<ManageUser />} />
-            <Route path="/manage-content" element={<ManageContent />} />
+            <Route path="/dashboard" element={<AdminCheck><Dashboard /></AdminCheck>} />
+            <Route path="/detail/:id" element={<AdminCheck><Detail /></AdminCheck>} />
+            <Route path="/manage-user" element={<AdminCheck><ManageUser /></AdminCheck>} />
+            <Route path="/manage-content" element={<AdminCheck><ManageContent /></AdminCheck>} />
+            <Route path="/aksesditolak" element={<AksesDitolak />} />
             <Route path="/logout" element={<Logout />} />
             <Route path="/riwayat-laporan/:id" element={<RiwayatLaporan />} />
           </Routes>

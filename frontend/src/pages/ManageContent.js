@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from "react";
 import UsersNavbar from "../components/usersNavbar";
-import {
-  Container,
-  Row,
-  Col,
-  Button,
-  Modal,
-  Form,
-  Table,
-} from "react-bootstrap";
+import {Container, Row, Col, Button, Modal, Form, Table,} from "react-bootstrap";
 import axios from "axios";
 import "../css/pages/ManageContent.css";
 
@@ -19,14 +11,16 @@ const ManageContent = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("content");
   const [editData, setEditData] = useState(null);
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    media: null,
-    url: "",
-  });
+  const [formData, setFormData] = useState({ title: "", description: "", media: null, url: "",});
   const [previewMedia, setPreviewMedia] = useState({ type: null, src: null });
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+
+    useEffect(() => {
+    fetchData();
+  }, []);
+
+
 
   // Helper function to check if a URL is an image
   const isImageUrl = (url) => {
@@ -72,9 +66,6 @@ const ManageContent = () => {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;

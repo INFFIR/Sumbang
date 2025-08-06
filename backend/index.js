@@ -9,7 +9,7 @@ const verifikasiRoutes = require("./routes/verifikasi");
 const manageUsersRoutes = require("./routes/manageUsers");
 const manageContentRoutes = require("./routes/manageContent");
 const detailRoute = require("./routes/detail");
-const laporanRoutes = require("./routes/laporan");
+const laporanRoutes = require("./routes/riwayatLaporan");
 
 dotenv.config();
 

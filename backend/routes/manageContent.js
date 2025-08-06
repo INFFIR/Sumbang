@@ -7,12 +7,6 @@ const multer = require("multer");
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.get("/manage-users",
-  authenticateToken,
-  authorizeRole("Admin"), // hanya Admin boleh akses
-  async (req, res) => { /* ... */ }
-);
-
 // --- GET All Content (Public) ---
 router.get("/manage/content", async (req, res) => {
   try {
@@ -40,7 +34,7 @@ router.get("/manage/service", async (req, res) => {
 });
 
 // --- CREATE Content ---
-router.post("/manage/content/create", authenticateToken, upload.single("media"), async (req, res) => {
+router.post("/manage/content/create", authenticateToken,  authorizeRole('Admin'), upload.single("media"), async (req, res) => {
   const { title, description, url } = req.body;
   const media = req.file ? req.file.buffer : null;
 
@@ -65,7 +59,7 @@ router.post("/manage/content/create", authenticateToken, upload.single("media"),
 });
 
 // --- CREATE Service ---
-router.post("/manage/service/create", authenticateToken, async (req, res) => {
+router.post("/manage/service/create", authenticateToken,  authorizeRole('Admin'), async (req, res) => {
   const { title, description } = req.body;
   if (!title && !description) return res.status(400).json({ error: "Minimal satu field harus diisi" });
 
@@ -79,7 +73,7 @@ router.post("/manage/service/create", authenticateToken, async (req, res) => {
 });
 
 // --- EDIT Content ---
-router.post("/manage/content/edit/:id", authenticateToken, upload.single("media"), async (req, res) => {
+router.post("/manage/content/edit/:id", authenticateToken,  authorizeRole('Admin'), upload.single("media"), async (req, res) => {
   const { title, description, url } = req.body;
   const media = req.file ? req.file.buffer : null;
   const { id } = req.params;
@@ -105,7 +99,7 @@ router.post("/manage/content/edit/:id", authenticateToken, upload.single("media"
 });
 
 // --- EDIT Service ---
-router.post("/manage/service/edit/:id", authenticateToken, async (req, res) => {
+router.post("/manage/service/edit/:id", authenticateToken,  authorizeRole('Admin'),async (req, res) => {
   const { title, description } = req.body;
   const { id } = req.params;
 
@@ -119,7 +113,7 @@ router.post("/manage/service/edit/:id", authenticateToken, async (req, res) => {
 });
 
 // --- DELETE Content ---
-router.post("/manage/content/delete/:id", authenticateToken, async (req, res) => {
+router.post("/manage/content/delete/:id", authenticateToken,  authorizeRole('Admin'), async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query("DELETE FROM content WHERE id = ?", [id]);
@@ -131,7 +125,7 @@ router.post("/manage/content/delete/:id", authenticateToken, async (req, res) =>
 });
 
 // --- DELETE Service ---
-router.post("/manage/service/delete/:id", authenticateToken, async (req, res) => {
+router.post("/manage/service/delete/:id", authenticateToken,  authorizeRole('Admin'), async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query("DELETE FROM service WHERE id = ?", [id]);

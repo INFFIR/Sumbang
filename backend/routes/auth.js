@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const pool = require("../src/db");
+const { authenticateToken, authorizeRole } = require("../src/authMiddleware"); 
 
 const router = express.Router();
 
@@ -78,6 +79,38 @@ router.post("/register", async (req, res) => {
   }
 });
 
+// router.get("/user", authenticateToken, async (req, res) => {
+//   try {
+//     const userId = req.user.id;
+//     const [rows] = await pool.query("SELECT id FROM users WHERE id = ?", [userId]);
+//     if (rows.length > 0) {
+//       res.json(rows[0]);
+//     } else {
+//       res.status(404).json({ error: "User not found" });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
+
+router.get("/userAdmin", authenticateToken, authorizeRole("Admin"), async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Ambil data user dari database
+    const [rows] = await pool.query("SELECT id, role FROM users WHERE id = ?", [userId]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(rows[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 
-module.exports = router;exports = router;
+module.exports = router;

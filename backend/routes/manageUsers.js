@@ -13,8 +13,12 @@ const generateUserId = () => {
   return `5${paddedDigits}`;
 };
 
+// app.get('/manage-users', authenticateToken, authorizeRole('Admin'), (req, res) => {
+//   res.json({ message: 'Welcome, admin' });
+// });
+
 // GET: ambil semua user dengan kolom lengkap
-router.get("/manage-users", authenticateToken, async (req, res) => {
+router.get("/manage-users", authenticateToken, authorizeRole('Admin'), async (req, res) => {
   try {
     const [rows] = await pool.query("SELECT id, username, email, role FROM users");
     res.json(rows);
@@ -28,7 +32,7 @@ router.get("/manage-users", authenticateToken, async (req, res) => {
 router.post("/manage-users", authenticateToken, async (req, res) => {
   const { username, email, password, role } = req.body;
 
-  if (!username || !email || !password || !role) {
+  if (!username || !email || !password ) {
     return res.status(400).json({ error: "Semua field (username, email, password, role) harus diisi." });
   }
 
@@ -38,7 +42,7 @@ router.post("/manage-users", authenticateToken, async (req, res) => {
 
     const [result] = await pool.query(
       "INSERT INTO users (id, username, email, password, role) VALUES (?, ?, ?, ?, ?)",
-      [userId, username, email, hashedPassword, role]
+      [userId, username, email, hashedPassword, "Admin"]
     );
 
     res.status(201).json({ id: userId, username, email, role });
