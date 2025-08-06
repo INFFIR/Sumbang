@@ -1,3 +1,4 @@
+//request data.js
 const express = require("express");
 const multer = require("multer");
 const moment = require("moment-timezone");
@@ -17,7 +18,6 @@ router.get("/data", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 router.get("/user", authenticateToken, async (req, res) => {
   try {
@@ -58,8 +58,8 @@ router.post(
     try {
       await pool.query(
         `INSERT INTO request_data (
-        nama, alamat, no_whatsapp, no_hp, permintaan, detail_permintaan, lokasi, surat, foto, status, date, keterangan
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Verifikasi', ?, ?)`,
+        nama, alamat, no_whatsapp, no_hp, permintaan, detail_permintaan, lokasi, surat, foto, status, date, keterangan, foto_selesai
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Verifikasi', ?, ?, NULL)`,
         [
           nama,
           alamat,
@@ -81,22 +81,5 @@ router.post(
     }   
   }
 );
-
-// router.put("/update-keterangan/:id", authenticateToken, async (req, res) => {
-//   const { id } = req.params;
-//   const { keterangan } = req.body;
-
-//   try {
-//     await pool.query(
-//       "UPDATE request_data SET keterangan = ? WHERE id = ?",
-//       [keterangan, id]
-//     );
-//     res.status(200).json({ message: "Keterangan updated successfully" });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
 
 module.exports = router;

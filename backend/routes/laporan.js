@@ -1,3 +1,4 @@
+//laporan.js 
 const express = require("express");
 const router = express.Router();
 const pool = require("../src/db"); // sesuaikan
@@ -31,7 +32,14 @@ router.get("/laporan/:id", async (req, res) => {
       return res.status(404).json({ error: "Data tidak ditemukan" });
     }
 
-    res.json(rows[0]);
+    const data = rows[0];
+
+    //Konversi foto_selesai ke base64 jika ada
+    if (data.foto_selesai) {
+      data.foto_selesai = data.foto_selesai.toString("base64");
+    }
+
+    res.json(data);
   } catch (error) {
     console.error("Gagal mengambil data laporan:", error);
     res.status(500).json({ error: "Gagal mengambil data laporan" });
