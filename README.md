@@ -149,6 +149,7 @@ npm start
 ```bash
 npm install axios
 cd backend/ml
+python3.11 -m venv venv
 venv\Scripts\activate
 pip install flask scikit-learn pandas joblib
 pip install matplotlib
@@ -180,8 +181,10 @@ PORT=5000
 # JWT_SECRET=3TmCjg1X2BaL7YuzoBem
 
 # 📧 Email Configuration
-EMAIL_USER=tumbalmagang@gmail.com //ganti email kamu
-EMAIL_PASS=rwpjrefqpoctlhqy //ganti sandi apikasi kamu
+EMAIL_USER=tumbalmagang@gmail.com 
+//ganti email kamu
+EMAIL_PASS=rwpjrefqpoctlhqy 
+//ganti sandi apikasi kamu
 ```
 
 **⚠️ Important Notes:**
