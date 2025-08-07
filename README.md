@@ -145,6 +145,20 @@ npm install react-icons
 npm start
 ```
 
+### 🎨 **Step 4: Anti DDoS Attack ML(RF)**
+```bash
+npm install axios
+cd backend/ml
+venv\Scripts\activate
+pip install flask scikit-learn pandas joblib
+pip install matplotlib
+pip install seaborn
+python train_ddos_model.py 
+python rf_server.py
+
+```
+
+
 **Your app will open at:** `http://localhost:3000`
 
 ---
@@ -163,11 +177,11 @@ DB_NAME=sumbang_db
 PORT=5000
 
 # 🔐 Security (DO NOT CHANGE)
-JWT_SECRET=3TmCjg1X2BaL7YuzoBem
+# JWT_SECRET=3TmCjg1X2BaL7YuzoBem
 
 # 📧 Email Configuration
-EMAIL_USER=tumbalmagang@gmail.com
-EMAIL_PASS=rwpjrefqpoctlhqy
+EMAIL_USER=tumbalmagang@gmail.com //ganti email kamu
+EMAIL_PASS=rwpjrefqpoctlhqy //ganti sandi apikasi kamu
 ```
 
 **⚠️ Important Notes:**
