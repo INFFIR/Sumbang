@@ -9,7 +9,7 @@ router.get("/laporan/:id/riwayat", async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      "SELECT status, keterangan, updated_at AS tanggal_diubah, updated_by AS diubah_oleh FROM request_data_history WHERE request_id = ?",
+      "SELECT status, keterangan, updated_at AS tanggal_diubah, updated_by AS diubah_oleh FROM request_data_history WHERE TRIM(updated_by) != 'system' AND request_id = ?",
       [requestId]
     );
     res.json(rows);

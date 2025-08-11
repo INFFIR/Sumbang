@@ -17,6 +17,7 @@ const Detail = () => {
   const [showOnProcessModal, setShowOnProcessModal] = useState(false);
   const [showDoneModal, setShowDoneModal] = useState(false);
   const [keterangan, setKeterangan] = useState("");
+  const [tempKeterangan, setTempKeterangan] = useState(""); // For modal input
   const [saving, setSaving] = useState(false);
   
   // New states for photo upload
@@ -60,9 +61,7 @@ const Detail = () => {
   // Function to format WhatsApp number and create WhatsApp URL
   const formatWhatsAppNumber = (number) => {
     if (!number) return null;
-    // Remove any non-numeric characters
     let cleaned = number.replace(/\D/g, '');
-    // Add country code if not present (assuming Indonesia +62)
     if (cleaned.startsWith('0')) {
       cleaned = '62' + cleaned.substring(1);
     } else if (!cleaned.startsWith('62')) {
@@ -87,6 +86,19 @@ const Detail = () => {
     }
   };
 
+  // Fungsi untuk refresh data dari server
+  const refreshData = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/detail/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setData(res.data);
+      setKeterangan(res.data.keterangan || "");
+    } catch (err) {
+      console.error("Error refreshing data:", err);
+    }
+  };
+
   // Handle Done with photo upload
   const handleDoneWithPhoto = async () => {
     if (!selectedPhoto) {
@@ -98,6 +110,11 @@ const Detail = () => {
     try {
       const formData = new FormData();
       formData.append("foto_selesai", selectedPhoto);
+      
+      // Tambahkan keterangan jika ada
+      if (tempKeterangan.trim()) {
+        formData.append("keterangan", tempKeterangan.trim());
+      }
 
       await axios.post(
         `${process.env.REACT_APP_API_URL}/api/update-status-with-photo/${id}`,
@@ -113,6 +130,8 @@ const Detail = () => {
       setData((prev) => ({ ...prev, status: "Done" }));
       handleClose();
       alert("Status berhasil diubah menjadi Done dan foto telah diupload.");
+      
+      refreshData();
     } catch (err) {
       console.error("Error updating status with photo:", err);
       alert("Terjadi kesalahan saat mengupload foto dan mengubah status.");
@@ -121,20 +140,29 @@ const Detail = () => {
     }
   };
 
-  const handleUpdateStatus = async (statusValue) => {
+  // Handle update status dengan keterangan
+  const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "") => {
     try {
       await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/update-status/${id}`,
-        { status: statusValue },
+        `${process.env.REACT_APP_API_URL}/api/update-status-with-keterangan/${id}`,
+        { 
+          status: statusValue,
+          keterangan: keteranganValue
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
       setData((prev) => ({ ...prev, status: statusValue }));
       handleClose();
+      
+      refreshData();
     } catch (err) {
       console.error("Error updating status:", err);
+      alert("Terjadi kesalahan saat mengupdate status.");
     }
   };
 
+  // Handle update keterangan saja (untuk tombol simpan keterangan)
   const handleSaveKeterangan = async () => {
     setSaving(true);
     try {
@@ -143,8 +171,11 @@ const Detail = () => {
         { keterangan },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
       setData((prev) => ({ ...prev, keterangan }));
       alert("Keterangan berhasil disimpan.");
+      
+      refreshData();
     } catch (error) {
       console.error("Gagal menyimpan keterangan:", error);
       alert("Terjadi kesalahan saat menyimpan keterangan.");
@@ -173,9 +204,17 @@ const Detail = () => {
     setShowOnHoldModal(false);
     setShowOnProcessModal(false);
     setShowDoneModal(false);
-    // Reset photo states when closing modal
+    // Reset states
     setSelectedPhoto(null);
     setPhotoPreview(null);
+    setTempKeterangan("");
+  };
+
+  // Handle modal dengan keterangan
+  const handleModalWithKeterangan = (statusType) => {
+    setModalType(statusType);
+    setTempKeterangan(""); // Reset temporary keterangan
+    setShowModal(true);
   };
 
   if (!data) return <div className="text-center mt-5">Loading...</div>;
@@ -285,25 +324,37 @@ const Detail = () => {
           </Col>
         </Row>
         
-        <Form.Group className="mb-3 d-flex align-items-end gap-2">
-          <div style={{ flex: 1 }}>
-            <Form.Label>Keterangan</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={2}
-              value={keterangan}
-              onChange={(e) => setKeterangan(e.target.value)}
-              placeholder={keterangan ? "" : "Tulis keterangan di sini..."}
-            />
-          </div>
-          <Button
-            variant="success"
-            onClick={handleSaveKeterangan}
-            disabled={saving}
-            style={{ height: "38px", marginBottom: "4px" }}
-          >
-            {saving ? "Menyimpan..." : "Simpan"}
-          </Button>
+        {/* FORM KETERANGAN - OPTIONAL UNTUK EDIT MANUAL */}
+        <Form.Group className="mb-3">
+          <Form.Label>Keterangan</Form.Label>
+          <Row className="align-items-end">
+            <Col>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={keterangan}
+                onChange={(e) => setKeterangan(e.target.value)}
+                placeholder="Tulis keterangan (opsional)"
+              />
+            </Col>
+            <Col xs="auto">
+              <Button
+                variant="success"
+                onClick={handleSaveKeterangan}
+                disabled={saving}
+                style={{ height: "38px" }}
+              >
+                {saving ? "Menyimpan..." : "Simpan"}
+              </Button>
+            </Col>
+          </Row>
+          {/* Display current saved keterangan */}
+          {data.keterangan && (
+            <div className="mt-2">
+              <small className="text-muted">Keterangan tersimpan: </small>
+              <span className="text-dark">{data.keterangan}</span>
+            </div>
+          )}
         </Form.Group>
 
         {/* TOMBOL AKSI */}
@@ -319,13 +370,21 @@ const Detail = () => {
             <>
               <Button
                 style={{ backgroundColor: "#7F8C8D" }}
-                onClick={() => setShowOnHoldModal(true)}
+                onClick={() => {
+                  setModalType("On Hold");
+                  setTempKeterangan("");
+                  setShowOnHoldModal(true);
+                }}
               >
                 On Hold
               </Button>
               <Button
                 style={{ backgroundColor: "#2980B9" }}
-                onClick={() => setShowOnProcessModal(true)}
+                onClick={() => {
+                  setModalType("On Process");
+                  setTempKeterangan("");
+                  setShowOnProcessModal(true);
+                }}
               >
                 On Process
               </Button>
@@ -335,7 +394,10 @@ const Detail = () => {
           {data.status === "On Process" && (
             <Button
               style={{ backgroundColor: "#191987ff" }}
-              onClick={() => setShowDoneModal(true)}
+              onClick={() => {
+                setTempKeterangan("");
+                setShowDoneModal(true);
+              }}
             >
               Done
             </Button>
@@ -344,7 +406,11 @@ const Detail = () => {
           {data.status === "On Hold" && (
             <Button
               style={{ backgroundColor: "#2980B9" }}
-              onClick={() => setShowOnProcessModal(true)}
+              onClick={() => {
+                setModalType("On Process");
+                setTempKeterangan("");
+                setShowOnProcessModal(true);
+              }}
             >
               On Process
             </Button>
@@ -354,19 +420,13 @@ const Detail = () => {
             <>
               <Button
                 style={{ backgroundColor: "#E74C3C" }}
-                onClick={() => {
-                  setModalType("Rejected");
-                  setShowModal(true);
-                }}
+                onClick={() => handleModalWithKeterangan("Rejected")}
               >
                 Rejected
               </Button>
               <Button
                 style={{ backgroundColor: "#27AE60" }}
-                onClick={() => {
-                  setModalType("Approved");
-                  setShowModal(true);
-                }}
+                onClick={() => handleModalWithKeterangan("Approved")}
               >
                 Approved
               </Button>
@@ -375,22 +435,36 @@ const Detail = () => {
         </div>
       </Container>
 
-      {/* Modal Approve/Reject */}
+      {/* Modal Approve/Reject dengan Keterangan */}
       <Modal show={showModal} onHide={handleClose} centered>
-        <Modal.Body className="text-center">
-          <p>
-            Apakah anda yakin ingin mengubah status menjadi{" "}
-            <strong>{modalType}</strong>?
-          </p>
-          <Button variant="secondary" onClick={handleClose} className="me-2">
-            Batal
-          </Button>
-          <Button
-            style={{ backgroundColor: "#27AE60", color: "#fff" }}
-            onClick={() => handleUpdateStatus(modalType)}
-          >
-            OK
-          </Button>
+        <Modal.Header closeButton>
+          <Modal.Title>Ubah Status ke {modalType}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Apakah anda yakin ingin mengubah status menjadi <strong>{modalType}</strong>?</p>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Keterangan (Opsional)</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={tempKeterangan}
+              onChange={(e) => setTempKeterangan(e.target.value)}
+              placeholder="Tambahkan Keterangan (Opsional)"
+            />
+          </Form.Group>
+
+          <div className="d-flex justify-content-end gap-2">
+            <Button variant="secondary" onClick={handleClose}>
+              Batal
+            </Button>
+            <Button
+              style={{ backgroundColor: "#27AE60", color: "#fff" }}
+              onClick={() => handleUpdateStatusWithKeterangan(modalType, tempKeterangan)}
+            >
+              {modalType}
+            </Button>
+          </div>
         </Modal.Body>
       </Modal>
 
@@ -410,53 +484,80 @@ const Detail = () => {
         </Modal.Body>
       </Modal>
 
-      {/* Modal On Hold */}
+      {/* Modal On Hold dengan Keterangan */}
       <Modal show={showOnHoldModal} onHide={handleClose} centered>
-        <Modal.Body className="text-center">
-          <p>
-            Apakah anda yakin ingin menandai laporan ini sebagai{" "}
-            <strong>On Hold</strong>?
-          </p>
-          <Button variant="secondary" onClick={handleClose} className="me-2">
-            Batal
-          </Button>
-          <Button
-            style={{ backgroundColor: "#27AE60", color: "#fff" }}
-            onClick={() => handleUpdateStatus("On Hold")}
-          >
-            OK
-          </Button>
+        <Modal.Header closeButton>
+          <Modal.Title>Ubah Status ke On Hold</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Apakah anda yakin ingin menandai laporan ini sebagai <strong>On Hold</strong>?</p>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Keterangan (Opsional)</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={tempKeterangan}
+              onChange={(e) => setTempKeterangan(e.target.value)}
+    
+            />
+          </Form.Group>
+
+          <div className="d-flex justify-content-end gap-2">
+            <Button variant="secondary" onClick={handleClose}>
+              Batal
+            </Button>
+            <Button
+              style={{ backgroundColor: "#27AE60", color: "#fff" }}
+              onClick={() => handleUpdateStatusWithKeterangan("On Hold", tempKeterangan)}
+            >
+              On Hold
+            </Button>
+          </div>
         </Modal.Body>
       </Modal>
 
-      {/* Modal On Process */}
+      {/* Modal On Process dengan Keterangan */}
       <Modal show={showOnProcessModal} onHide={handleClose} centered>
-        <Modal.Body className="text-center">
-          <p>
-            Apakah anda yakin ingin menandai laporan ini sebagai{" "}
-            <strong>On Process</strong>?
-          </p>
-          <Button variant="secondary" onClick={handleClose} className="me-2">
-            Batal
-          </Button>
-          <Button
-            style={{ backgroundColor: "#27AE60", color: "#fff" }}
-            onClick={() => handleUpdateStatus("On Process")}
-          >
-            OK
-          </Button>
+        <Modal.Header closeButton>
+          <Modal.Title>Ubah Status ke On Process</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Apakah anda yakin ingin menandai laporan ini sebagai <strong>On Process</strong>?</p>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Keterangan (Opsional)</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={tempKeterangan}
+              onChange={(e) => setTempKeterangan(e.target.value)}
+              
+            />
+          </Form.Group>
+
+          <div className="d-flex justify-content-end gap-2">
+            <Button variant="secondary" onClick={handleClose}>
+              Batal
+            </Button>
+            <Button
+              style={{ backgroundColor: "#27AE60", color: "#fff" }}
+              onClick={() => handleUpdateStatusWithKeterangan("On Process", tempKeterangan)}
+            >
+              On Process
+            </Button>
+          </div>
         </Modal.Body>
       </Modal>
 
-      {/* Modal Done with Photo Upload */}
+      {/* Modal Done dengan Keterangan dan Photo Upload */}
       <Modal show={showDoneModal} onHide={handleClose} centered>
         <Modal.Header closeButton>
           <Modal.Title>Upload Foto Penyelesaian</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p className="mb-3">
-            Silakan upload foto sebagai bukti penyelesaian sebelum menandai laporan sebagai{" "}
-            <strong>Done</strong>.
+            Silakan upload foto sebagai bukti penyelesaian sebelum menandai laporan sebagai <strong>Done</strong>.
           </p>
           
           <Form.Group className="mb-3">
@@ -465,6 +566,17 @@ const Detail = () => {
               type="file"
               accept="image/*"
               onChange={handlePhotoSelect}
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Keterangan Penyelesaian (Opsional)</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={tempKeterangan}
+              onChange={(e) => setTempKeterangan(e.target.value)}
+             
             />
           </Form.Group>
 

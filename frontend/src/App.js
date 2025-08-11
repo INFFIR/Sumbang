@@ -11,7 +11,7 @@ import Detail from "./pages/Detail";
 import ManageUser from "./pages/ManageUser";
 import Logout from "./pages/Logout";
 import ManageContent from "./pages/ManageContent";
-import RiwayatLaporan from "./pages/RiwayanLaporan";
+import RiwayatLaporan from "./pages/RiwayatLaporan";
 import "./App.css";
 import AdminCheck from "./components/AdminCheck";
 import AksesDitolak from "./pages/AksesDitolak";
