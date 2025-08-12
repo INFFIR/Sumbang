@@ -55,7 +55,7 @@ const Signup = () => {
       <Container className="mt-5">
         <Row className="justify-content-center">
           <Col md={4}>
-            <h2 className="text-center mb-4 fw-bold">SignUp Sumbang</h2>
+            <h2 className="text-center mb-4 fw-bold">Sign-Up Sumbang</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form noValidate validated={validated} onSubmit={handleSubmit}>
               <Form.Group controlId="formUsername">
@@ -98,8 +98,21 @@ const Signup = () => {
               </Form.Group>
 
               <Button variant="primary" type="submit" className="mt-4 w-100">
-                Signup
+                Sign-Up
               </Button>
+
+            {/* ✅ Tombol Login di bawah Sign Up */}
+            <div className="text-center mt-3">
+              <span>Sudah punya akun? </span>
+              <Button
+                variant="link"
+                onClick={() => navigate("/login")}
+                className="p-0 align-baseline"
+              >
+                Login
+              </Button>
+            </div>
+
             </Form>
           </Col>
         </Row>

@@ -106,7 +106,7 @@ const Login = () => {
                 onClick={() => navigate("/signup")}
                 className="p-0 align-baseline"
               >
-                Sign Up
+                Buat Akun Baru
               </Button>
             </div>
           </Col>
