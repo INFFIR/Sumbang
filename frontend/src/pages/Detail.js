@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 import DetailNavbar from "../components/detailNavbar";
 import "../css/pages/Detail.css";
 
@@ -19,6 +20,10 @@ const Detail = () => {
   const [keterangan, setKeterangan] = useState("");
   const [tempKeterangan, setTempKeterangan] = useState(""); // For modal input
   const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
   
   // New states for photo upload
   const [selectedPhoto, setSelectedPhoto] = useState(null);
@@ -26,6 +31,7 @@ const Detail = () => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const token = localStorage.getItem("token");
+  const handleShowSuccess = () => setShowSuccess(true);
 
   useEffect(() => {
     if (data?.keterangan) {
@@ -117,7 +123,7 @@ const Detail = () => {
       }
 
       await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/update-status-with-photo/${id}`,
+        `${process.env.REACT_APP_API_URL}/api/update-status/${id}`,
         formData,
         {
           headers: {
@@ -140,27 +146,113 @@ const Detail = () => {
     }
   };
 
-  // Handle update status dengan keterangan
-  const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "") => {
-    try {
-      await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/update-status-with-keterangan/${id}`,
-        { 
-          status: statusValue,
-          keterangan: keteranganValue
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      setData((prev) => ({ ...prev, status: statusValue }));
+const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "") => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    setErrorMessage("Anda harus login terlebih dahulu");
+    handleClose();
+    return;
+  }
+
+  let decoded;
+  try {
+    decoded = jwtDecode(token);
+    const currentTime = Date.now() / 1000;
+    if (decoded.exp < currentTime) {
+      setErrorMessage("Session telah berakhir. Silakan login kembali.");
+      localStorage.removeItem("token");
       handleClose();
-      
-      refreshData();
-    } catch (err) {
-      console.error("Error updating status:", err);
-      alert("Terjadi kesalahan saat mengupdate status.");
+      return;
     }
-  };
+  } catch (err) {
+    console.error("Token tidak valid", err);
+    setErrorMessage("Token tidak valid. Silakan login kembali.");
+    localStorage.removeItem("token");
+    handleClose();
+    return;
+  }
+
+  setLoading(true);
+  setErrorMessage("");
+
+  try {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    if (!apiUrl) {
+      throw new Error("API URL tidak ditemukan. Pastikan REACT_APP_API_URL sudah diset di file .env");
+    }
+
+    const payload = {
+      status: statusValue,
+      keterangan: keteranganValue
+    };
+
+    const response = await axios.put(
+      `${apiUrl}/api/update-status/${id}`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        timeout: 60000,
+      }
+    );
+
+    if (response.data.warning) {
+      setSuccessMessage(`${response.data.message}. ${response.data.warning}`);
+    } else {
+      setSuccessMessage(response.data.message || "Status berhasil diperbarui dan email notifikasi telah dikirim!");
+    }
+
+    setData((prev) => ({ ...prev, status: statusValue }));
+
+    handleClose();
+    refreshData();
+    handleShowSuccess();
+
+  } catch (error) {
+    console.error("Error updating status:", error);
+
+    let errorMsg = "Terjadi kesalahan saat mengupdate status.";
+
+    if (error.code === 'ERR_NETWORK') {
+      errorMsg = "Tidak dapat terhubung ke server. Pastikan server backend berjalan dan koneksi internet Anda stabil.";
+    } else if (error.code === 'ECONNABORTED') {
+      errorMsg = "Request timeout. Periksa koneksi internet.";
+    } else if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          errorMsg = "Session telah berakhir. Silakan login kembali.";
+          localStorage.removeItem("token");
+          break;
+        case 413:
+          errorMsg = "File terlalu besar. Maksimal 10MB untuk PDF dan 5MB untuk gambar.";
+          break;
+        case 400:
+          errorMsg = error.response.data?.error || "Data yang dikirim tidak valid.";
+          break;
+        case 500:
+          errorMsg = error.response.data?.error || "Terjadi kesalahan di server.";
+          break;
+        default:
+          errorMsg = error.response.data?.error ||
+                     error.response.data?.message ||
+                     `Server error: ${error.response.status}`;
+      }
+    } else if (error.request) {
+      errorMsg = "Server tidak merespons. Periksa apakah server backend berjalan.";
+    } else if (error.message) {
+      errorMsg = error.message;
+    }
+
+    setErrorMessage(errorMsg);
+    handleClose();
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Handle update keterangan saja (untuk tombol simpan keterangan)
   const handleSaveKeterangan = async () => {

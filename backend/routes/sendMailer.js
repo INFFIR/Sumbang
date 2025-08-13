@@ -271,209 +271,143 @@ const sendMail = async (toEmail, username) => {
 
 // Function untuk mengirim email update status
 const sendStatusUpdateMail = async (toEmail, username, status, keterangan) => {
-  console.log("=== STATUS UPDATE EMAIL DEBUG ===");
-  console.log("To email:", toEmail);
-  console.log("Username:", username);
-  console.log("Status:", status);
-  console.log("Keterangan:", keterangan);
-
-  // Validasi transporter
+  // Validasi transporter & input
   if (!transporter) {
-    console.error("❌ Transporter not available, trying to reinitialize...");
     const initialized = await initializeTransporter();
-    if (!initialized) {
-      throw new Error("Email transporter not available. Please check email configuration.");
-    }
+    if (!initialized) throw new Error("Email transporter not available.");
   }
+  if (!toEmail || !username) throw new Error("Email dan username harus disediakan");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toEmail)) throw new Error(`Format email tidak valid: ${toEmail}`);
 
-  // Validasi input
-  if (!toEmail || !username) {
-    throw new Error("Email dan username harus disediakan");
-  }
-
-  // Validasi format email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(toEmail)) {
-    throw new Error(`Format email tidak valid: ${toEmail}`);
-  }
-
+  // Warna & ikon status
   let statusColor, statusIcon, statusText;
-  
   switch (status) {
     case 'Disetujui':
-      statusColor = '#4caf50';
-      statusIcon = '✅';
-      statusText = 'DISETUJUI';
-      break;
+      statusColor = '#4caf50'; statusIcon = '✅'; statusText = 'DISETUJUI'; break;
     case 'Ditolak':
-      statusColor = '#f44336';
-      statusIcon = '❌';
-      statusText = 'DITOLAK';
-      break;
+      statusColor = '#f44336'; statusIcon = '❌'; statusText = 'DITOLAK'; break;
     case 'Sedang Proses':
-      statusColor = '#ff9800';
-      statusIcon = '⏳';
-      statusText = 'SEDANG DIPROSES';
-      break;
+      statusColor = '#ff9800'; statusIcon = '⏳'; statusText = 'SEDANG DIPROSES'; break;
     default:
-      statusColor = '#2196f3';
-      statusIcon = '📄';
-      statusText = status.toUpperCase();
+      statusColor = '#2196f3'; statusIcon = '📄'; statusText = status.toUpperCase();
   }
 
-  try {
-    // Test koneksi sebelum kirim
-    await transporter.verify();
-    
-    const mailOptions = {
-      from: `"SUMBANG Notification" <${process.env.EMAIL_USER}>`,
-      to: toEmail,
-      subject: `📢 Update Status Laporan SUMBANG - ${statusText}`,
-      html: `
-        <html>
-          <head>
-            <meta charset="UTF-8" />
-            <title>Update Status Laporan SUMBANG</title>
-            <style>
-              body {
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                background-color: #f8f9fa;
-                margin: 0;
-                padding: 0;
-                line-height: 1.6;
-              }
-              .email-container {
-                background-color: #ffffff;
-                max-width: 600px;
-                margin: 40px auto;
-                padding: 30px;
-                border-radius: 12px;
-                text-align: center;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-                border-top: 4px solid ${statusColor};
-              }
-              .header {
-                background-color: ${statusColor};
-                color: white;
-                padding: 20px;
-                border-radius: 8px 8px 0 0;
-                margin: -30px -30px 20px -30px;
-              }
-              .header h1 {
-                margin: 0;
-                font-size: 24px;
-              }
-              .message {
-                font-size: 16px;
-                color: #333333;
-                margin: 20px 0;
-                text-align: left;
-              }
-              .status-highlight {
-                background-color: ${statusColor}15;
-                padding: 20px;
-                border-radius: 8px;
-                border-left: 4px solid ${statusColor};
-                margin: 20px 0;
-              }
-              .footer {
-                margin-top: 30px;
-                padding-top: 20px;
-                border-top: 1px solid #eeeeee;
-                font-size: 12px;
-                color: #666666;
-              }
-              .status-badge {
-                background-color: ${statusColor};
-                color: white;
-                padding: 8px 16px;
-                border-radius: 20px;
-                display: inline-block;
-                font-weight: bold;
-                margin: 10px 0;
-              }
-              .keterangan-box {
-                background-color: #f8f9fa;
-                border: 1px solid #dee2e6;
-                border-radius: 8px;
-                padding: 15px;
-                margin: 15px 0;
-                text-align: left;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="email-container">
-              <div class="header">
-                <h1>📢 UPDATE STATUS</h1>
-                <p style="margin: 0;">Sistem SUMBANG</p>
-              </div>
-              
-              <div class="message">
-                <p><strong>Halo ${username},</strong></p>
-                
-                <div class="status-highlight">
-                  <p><strong>${statusIcon} Status laporan Anda telah diupdate!</strong></p>
-                  <div class="status-badge">${statusIcon} ${statusText}</div>
-                  <p><strong>Waktu Update:</strong> ${new Date().toLocaleString('id-ID')}</p>
-                </div>
-                
-                ${keterangan ? `
-                  <div class="keterangan-box">
-                    <p><strong>💬 Keterangan dari Tim:</strong></p>
-                    <p style="color: #555; margin: 5px 0; font-style: italic;">${keterangan}</p>
-                  </div>
-                ` : ''}
-                
-                <p>Terima kasih atas kesabaran Anda. Tim SUMBANG berkomitmen untuk memberikan pelayanan terbaik bagi masyarakat.</p>
-              </div>
-              
-              <div class="footer">
-                <p>📧 Email ini dikirim secara otomatis oleh sistem SUMBANG</p>
-                <p>&copy; ${new Date().getFullYear()} Sistem SUMBANG - Sarana Prasarana Untuk Masyarakat Batu Gampang</p>
-              </div>
+  const mailOptions = {
+    from: `"SUMBANG Notification" <${process.env.EMAIL_USER}>`,
+    to: toEmail,
+    subject: `Update Status Laporan SUMBANG - ${statusText}`,
+    html: `
+      <html>
+        <head>
+          <meta charset="UTF-8" />
+          <title>Update Status Laporan SUMBANG</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              background-color: #f8f9fa;
+              margin: 0;
+              padding: 0;
+              line-height: 1.6;
+            }
+            .email-container {
+              background-color: #ffffff;
+              max-width: 600px;
+              margin: 40px auto;
+              padding: 30px;
+              border-radius: 12px;
+              text-align: center;
+              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+              border-top: 4px solid ${statusColor};
+            }
+            .header {
+              background-color: ${statusColor};
+              color: white;
+              padding: 20px;
+              border-radius: 8px 8px 0 0;
+              margin: -30px -30px 20px -30px;
+            }
+            .header h1 {
+              margin: 0;
+              font-size: 24px;
+            }
+            .message {
+              font-size: 16px;
+              color: #333333;
+              margin: 20px 0;
+              text-align: left;
+            }
+            .highlight {
+              background-color: ${statusColor}15;
+              padding: 20px;
+              border-radius: 8px;
+              border-left: 4px solid ${statusColor};
+              margin: 20px 0;
+            }
+            .footer {
+              margin-top: 30px;
+              padding-top: 20px;
+              border-top: 1px solid #eeeeee;
+              font-size: 12px;
+              color: #666666;
+            }
+            .status-badge {
+              background-color: ${statusColor};
+              color: white;
+              padding: 8px 16px;
+              border-radius: 20px;
+              display: inline-block;
+              font-weight: bold;
+              margin: 10px 0;
+            }
+            .info-box {
+              background-color: #f8f9fa;
+              border: 1px solid #dee2e6;
+              border-radius: 8px;
+              padding: 15px;
+              margin: 15px 0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="email-container">
+            <div class="header">
+              <h1>🏢 SISTEM SUMBANG</h1>
+              <p style="margin: 0;">Sarana Prasarana Untuk Masyarakat Batu Gampang</p>
             </div>
-          </body>
-        </html>
-      `,
-    };
+            
+            <div class="message">
+              <p><strong>Halo ${username},</strong></p>
+              <div class="highlight">
+                <p><strong>${statusIcon} Status laporan Anda telah diperbarui!</strong></p>
+                <div class="status-badge">${statusIcon} ${statusText}</div>
+                <p><strong>Waktu Update:</strong> ${new Date().toLocaleString('id-ID')}</p>
+              </div>
 
-    const result = await transporter.sendMail(mailOptions);
-    console.log(`✅ Status update email berhasil dikirim ke ${toEmail}:`, result.messageId);
-    return result;
-  } catch (error) {
-    console.error("❌ Error mengirim status update email:", error);
-    throw error;
-  }
-};
+              ${keterangan ? `
+                <div class="info-box">
+                  <p><strong>💬 Keterangan dari Tim:</strong></p>
+                  <p style="color: #555; font-style: italic; margin: 5px 0;">${keterangan}</p>
+                </div>
+              ` : ''}
 
-// ✅ ADDED: Function untuk test email (debugging)
-const testEmailConnection = async () => {
-  try {
-    console.log("=== EMAIL CONNECTION TEST ===");
-    
-    if (!transporter) {
-      console.log("Initializing transporter...");
-      await initializeTransporter();
-    }
-    
-    if (!transporter) {
-      throw new Error("Failed to initialize transporter");
-    }
-    
-    console.log("Testing SMTP connection...");
-    await transporter.verify();
-    console.log("✅ SMTP connection successful");
-    
-    return { success: true, message: "Email connection OK" };
-  } catch (error) {
-    console.error("❌ Email connection test failed:", error.message);
-    return { success: false, error: error.message, code: error.code };
-  }
+              <p>Terima kasih telah menggunakan sistem SUMBANG. Kami akan terus memberikan update hingga laporan selesai diproses.</p>
+            </div>
+
+            <div class="footer">
+              <p>📧 Email ini dikirim otomatis oleh sistem SUMBANG</p>
+              <p>&copy; ${new Date().getFullYear()} Sistem SUMBANG</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `
+  };
+
+  return transporter.sendMail(mailOptions);
 };
 
 module.exports = { 
   sendMail, 
   sendStatusUpdateMail,
-  testEmailConnection  // ✅ ADDED untuk debugging
+  // testEmailConnection  // ✅ ADDED untuk debugging
 };

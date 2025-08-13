@@ -253,38 +253,80 @@ router.post("/update-status/:id", authenticateToken, validateUserContext, async 
 });
 
 // POST Update Status with Keterangan - ENDPOINT UTAMA
-router.post("/update-status-with-keterangan/:id", authenticateToken, validateUserContext, async (req, res) => {
-  const { id } = req.params;
-  const { status, keterangan } = req.body;
-  const timestamp = getTimestamp();
-  const updatedBy = req.user.username;
+router.post(
+  "/update-status-with-keterangan",
+  authenticateToken,
+  async (req, res) => {
+    console.log("=== UPDATE STATUS DEBUG ===");
+    console.log("Headers:", req.headers);
+    console.log("Body:", req.body);
+    console.log("User from token:", req.user);
 
-  console.log(`🔄 Updating status+keterangan for request ${id}: ${status} by ${updatedBy}`);
+    try {
+      // Validasi user dari token
+      if (!req.user || !req.user.id || !req.user.email || !req.user.username) {
+        console.error("Invalid user data from token:", req.user);
+        return res.status(401).json({ error: "Invalid authentication data" });
+      }
 
-  try {
-    // Update status dan keterangan di tabel utama
-    const [result] = await pool.query(
-      "UPDATE request_data SET status = ?, keterangan = ?, date = ? WHERE id = ?",
-      [status, keterangan || null, timestamp, id]
-    );
-    
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Data tidak ditemukan" });
+      const { requestId, status, keterangan = "" } = req.body;
+
+      if (!requestId || !status) {
+        return res.status(400).json({
+          error: "requestId dan status wajib diisi"
+        });
+      }
+
+      const date = moment().tz("Asia/Jakarta").format("YYYY-MM-DD HH:mm:ss");
+      const email = req.user.email;
+      const username = req.user.username;
+
+      // Update status dan keterangan di database
+      console.log("Updating database...");
+      const updateQuery = `
+        UPDATE request_data
+        SET status = ?, keterangan = ?, date = ?
+        WHERE id = ? AND id_user = ?
+      `;
+
+      const [result] = await pool.query(updateQuery, [
+        status.trim(),
+        keterangan.trim(),
+        date,
+        requestId,
+        req.user.id
+      ]);
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Data tidak ditemukan atau tidak ada perubahan" });
+      }
+
+      // Kirim email notifikasi
+      console.log("Sending email notification...");
+      try {
+        await sendMail(email, username);
+        console.log("✅ Email sent successfully");
+
+        res.status(200).json({
+          message: "Status berhasil diperbarui dan email notifikasi telah dikirim"
+        });
+      } catch (emailError) {
+        console.error("=== EMAIL ERROR DETAILS ===", emailError);
+        res.status(200).json({
+          message: "Status berhasil diperbarui",
+          warning: "Email notifikasi gagal dikirim"
+        });
+      }
+
+    } catch (error) {
+      console.error("=== UPDATE STATUS ERROR ===", error);
+      res.status(500).json({
+        error: "Server error",
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
-
-    // Insert ke history dengan duplicate check
-    const historyResult = await insertHistoryWithDuplicateCheck(id, status, keterangan || null, updatedBy, 'UPDATE');
-    console.log('History operation result:', historyResult);
-
-    res.status(200).json({ 
-      message: "Status dan keterangan berhasil diupdate",
-      historyResult: historyResult
-    });
-  } catch (error) {
-    console.error("Error updating status with keterangan:", error);
-    res.status(500).json({ message: "Internal server error" });
   }
-});
+);
 
 // POST Update Status with Photo Upload (specifically for Done status)
 router.post("/update-status-with-photo/:id", authenticateToken, validateUserContext, upload.single("foto_selesai"), async (req, res) => {
