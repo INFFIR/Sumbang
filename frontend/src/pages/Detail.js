@@ -1,7 +1,7 @@
-//Detail.js
+//Detail.js frontend
 
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
+import { Container, Row, Col, Button, Modal, Form, Alert } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -18,20 +18,25 @@ const Detail = () => {
   const [showOnProcessModal, setShowOnProcessModal] = useState(false);
   const [showDoneModal, setShowDoneModal] = useState(false);
   const [keterangan, setKeterangan] = useState("");
-  const [tempKeterangan, setTempKeterangan] = useState(""); // For modal input
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
-  
+  const [loading, setLoading] = useState(false);
+
   // New states for photo upload
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  
+  // New states for email notifications
+  const [emailNotification, setEmailNotification] = useState({
+    show: false,
+    message: "",
+    variant: "success"
+  });
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const token = localStorage.getItem("token");
-  const handleShowSuccess = () => setShowSuccess(true);
 
   useEffect(() => {
     if (data?.keterangan) {
@@ -39,6 +44,7 @@ const Detail = () => {
     }
   }, [data]);
 
+  // Load detail data
   useEffect(() => {
     if (!token) return;
 
@@ -46,9 +52,74 @@ const Detail = () => {
       .get(`${process.env.REACT_APP_API_URL}/api/detail/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => setData(res.data))
-      .catch((err) => console.error(err));
+      .then((res) => {
+        console.log("Detail data loaded:", res.data);
+        setData(res.data);
+      })
+      .catch((err) => {
+        console.error("Error loading detail:", err);
+      });
   }, [id, token]);
+
+  // Function to show email notification
+  const showEmailNotification = (message, variant = "success") => {
+    setEmailNotification({
+      show: true,
+      message,
+      variant
+    });
+    
+    // Auto hide after 5 seconds
+    setTimeout(() => {
+      setEmailNotification(prev => ({ ...prev, show: false }));
+    }, 5000);
+  };
+
+  // Function to send status update email
+  const sendStatusUpdateEmail = async (newStatus, keteranganEmail = "") => {
+    if (!data?.email) {
+      console.log("Email tidak tersedia untuk user ini");
+      showEmailNotification("Email tidak tersedia untuk user ini", "warning");
+      return;
+    }
+
+    console.log("Sending status update email:", {
+      email: data.email,
+      username: data.username || data.nama,
+      status: newStatus,
+      keterangan: keteranganEmail || keterangan
+    });
+
+    setSendingEmail(true);
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/send-status-email`,
+        {
+          toEmail: data.email,
+          username: data.username || data.nama,
+          status: newStatus,
+          keterangan: keteranganEmail || keterangan
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      
+      console.log("Email sent successfully:", response.data);
+      showEmailNotification(
+        `Email notifikasi status "${newStatus}" berhasil dikirim ke ${data.email}`,
+        "success"
+      );
+    } catch (error) {
+      console.error("Error sending email:", error);
+      showEmailNotification(
+        `Gagal mengirim email notifikasi: ${error.response?.data?.message || error.message}`,
+        "danger"
+      );
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   const getPdfUrl = (base64) => {
     if (!base64) return null;
@@ -67,7 +138,9 @@ const Detail = () => {
   // Function to format WhatsApp number and create WhatsApp URL
   const formatWhatsAppNumber = (number) => {
     if (!number) return null;
+    // Remove any non-numeric characters
     let cleaned = number.replace(/\D/g, '');
+    // Add country code if not present (assuming Indonesia +62)
     if (cleaned.startsWith('0')) {
       cleaned = '62' + cleaned.substring(1);
     } else if (!cleaned.startsWith('62')) {
@@ -92,20 +165,8 @@ const Detail = () => {
     }
   };
 
-  // Fungsi untuk refresh data dari server
-  const refreshData = async () => {
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/detail/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setData(res.data);
-      setKeterangan(res.data.keterangan || "");
-    } catch (err) {
-      console.error("Error refreshing data:", err);
-    }
-  };
-
   // Handle Done with photo upload
+  // Handle Done with photo upload - UPDATED
   const handleDoneWithPhoto = async () => {
     if (!selectedPhoto) {
       alert("Silakan pilih foto terlebih dahulu sebelum menandai sebagai Done.");
@@ -116,14 +177,15 @@ const Detail = () => {
     try {
       const formData = new FormData();
       formData.append("foto_selesai", selectedPhoto);
-      
-      // Tambahkan keterangan jika ada
-      if (tempKeterangan.trim()) {
-        formData.append("keterangan", tempKeterangan.trim());
-      }
 
-      await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/update-status/${id}`,
+      console.log("Uploading photo and updating status to Done...", {
+        photoName: selectedPhoto.name,
+        photoSize: selectedPhoto.size,
+        userEmail: data.email
+      });
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/update-status-with-photo/${id}`,
         formData,
         {
           headers: {
@@ -133,128 +195,126 @@ const Detail = () => {
         }
       );
 
+      console.log("Status updated successfully:", response.data);
+
       setData((prev) => ({ ...prev, status: "Done" }));
-      handleClose();
-      alert("Status berhasil diubah menjadi Done dan foto telah diupload.");
       
-      refreshData();
+      // Show success notification with photo email info
+      if (data.email) {
+        showEmailNotification(
+          `Status berhasil diubah menjadi Done! Email notifikasi dengan foto penyelesaian telah dikirim ke ${data.email}`,
+          "success"
+        );
+      } else {
+        showEmailNotification(
+          "Status berhasil diubah menjadi Done dan foto telah diupload",
+          "success"
+        );
+      }
+      
+      handleClose();
     } catch (err) {
       console.error("Error updating status with photo:", err);
-      alert("Terjadi kesalahan saat mengupload foto dan mengubah status.");
+      
+      // More detailed error handling
+      let errorMessage = "Terjadi kesalahan saat mengupload foto dan mengubah status";
+      
+      if (err.response?.status === 400) {
+        errorMessage = "Foto harus diupload terlebih dahulu";
+      } else if (err.response?.status === 404) {
+        errorMessage = "Data laporan tidak ditemukan";
+      } else if (err.response?.status === 413) {
+        errorMessage = "Ukuran foto terlalu besar. Maksimal 10MB";
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      }
+      
+      showEmailNotification(errorMessage, "danger");
     } finally {
       setUploadingPhoto(false);
     }
   };
 
-const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "") => {
-  const token = localStorage.getItem("token");
+  // Updated handleUpdateStatus function
+  const handleUpdateStatus = async (newStatus) => {
+    console.log("=== UPDATE STATUS DEBUG ===");
+    console.log("New Status:", newStatus);
+    console.log("Data:", data);
 
-  if (!token) {
-    setErrorMessage("Anda harus login terlebih dahulu");
-    handleClose();
-    return;
-  }
-
-  let decoded;
-  try {
-    decoded = jwtDecode(token);
-    const currentTime = Date.now() / 1000;
-    if (decoded.exp < currentTime) {
-      setErrorMessage("Session telah berakhir. Silakan login kembali.");
-      localStorage.removeItem("token");
-      handleClose();
+    if (!token) {
+      setErrorMessage("Anda harus login terlebih dahulu");
       return;
     }
-  } catch (err) {
-    console.error("Token tidak valid", err);
-    setErrorMessage("Token tidak valid. Silakan login kembali.");
-    localStorage.removeItem("token");
-    handleClose();
-    return;
-  }
 
-  setLoading(true);
-  setErrorMessage("");
+    setLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
 
-  try {
-    const apiUrl = process.env.REACT_APP_API_URL;
-    if (!apiUrl) {
-      throw new Error("API URL tidak ditemukan. Pastikan REACT_APP_API_URL sudah diset di file .env");
-    }
-
-    const payload = {
-      status: statusValue,
-      keterangan: keteranganValue
-    };
-
-    const response = await axios.put(
-      `${apiUrl}/api/update-status/${id}`,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+    try {
+      // First update the status in backend
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/update-status/${id}`,
+        { 
+          status: newStatus, 
+          keterangan: keterangan || "" 
         },
-        timeout: 60000,
-      }
-    );
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
 
-    if (response.data.warning) {
-      setSuccessMessage(`${response.data.message}. ${response.data.warning}`);
-    } else {
-      setSuccessMessage(response.data.message || "Status berhasil diperbarui dan email notifikasi telah dikirim!");
+      // Update local state
+      setData(prev => ({ ...prev, status: newStatus }));
+
+      // Send email notification
+      await sendStatusUpdateEmail(newStatus);
+
+      setSuccessMessage(`Status berhasil diubah menjadi ${newStatus}`);
+      handleClose();
+
+    } catch (error) {
+      console.error("Error updating status:", error);
+      setErrorMessage(error.response?.data?.message || "Terjadi kesalahan saat mengupdate status");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setData((prev) => ({ ...prev, status: statusValue }));
+  // Handle quick status updates
+  const handleQuickStatusUpdate = async (newStatus) => {
+    console.log("Quick status update:", newStatus);
+    
+    setLoading(true);
+    try {
+      // Update status via backend
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/update-status/${id}`,
+        { 
+          status: newStatus, 
+          keterangan: keterangan || "" 
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
 
-    handleClose();
-    refreshData();
-    handleShowSuccess();
+      // Update local state
+      setData(prev => ({ ...prev, status: newStatus }));
 
-  } catch (error) {
-    console.error("Error updating status:", error);
+      // Send email notification
+      await sendStatusUpdateEmail(newStatus);
 
-    let errorMsg = "Terjadi kesalahan saat mengupdate status.";
+      setSuccessMessage(`Status berhasil diubah menjadi ${newStatus}`);
+      handleClose();
 
-    if (error.code === 'ERR_NETWORK') {
-      errorMsg = "Tidak dapat terhubung ke server. Pastikan server backend berjalan dan koneksi internet Anda stabil.";
-    } else if (error.code === 'ECONNABORTED') {
-      errorMsg = "Request timeout. Periksa koneksi internet.";
-    } else if (error.response) {
-      switch (error.response.status) {
-        case 401:
-          errorMsg = "Session telah berakhir. Silakan login kembali.";
-          localStorage.removeItem("token");
-          break;
-        case 413:
-          errorMsg = "File terlalu besar. Maksimal 10MB untuk PDF dan 5MB untuk gambar.";
-          break;
-        case 400:
-          errorMsg = error.response.data?.error || "Data yang dikirim tidak valid.";
-          break;
-        case 500:
-          errorMsg = error.response.data?.error || "Terjadi kesalahan di server.";
-          break;
-        default:
-          errorMsg = error.response.data?.error ||
-                     error.response.data?.message ||
-                     `Server error: ${error.response.status}`;
-      }
-    } else if (error.request) {
-      errorMsg = "Server tidak merespons. Periksa apakah server backend berjalan.";
-    } else if (error.message) {
-      errorMsg = error.message;
+    } catch (error) {
+      console.error("Error in quick status update:", error);
+      setErrorMessage(error.response?.data?.message || "Terjadi kesalahan saat mengupdate status");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setErrorMessage(errorMsg);
-    handleClose();
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  // Handle update keterangan saja (untuk tombol simpan keterangan)
   const handleSaveKeterangan = async () => {
     setSaving(true);
     try {
@@ -263,14 +323,11 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
         { keterangan },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
       setData((prev) => ({ ...prev, keterangan }));
-      alert("Keterangan berhasil disimpan.");
-      
-      refreshData();
+      showEmailNotification("Keterangan berhasil disimpan", "success");
     } catch (error) {
       console.error("Gagal menyimpan keterangan:", error);
-      alert("Terjadi kesalahan saat menyimpan keterangan.");
+      showEmailNotification("Terjadi kesalahan saat menyimpan keterangan", "danger");
     } finally {
       setSaving(false);
     }
@@ -287,6 +344,7 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
       window.location.href = "/dashboard";
     } catch (err) {
       console.error(err);
+      showEmailNotification("Terjadi kesalahan saat menghapus data", "danger");
     }
   };
 
@@ -296,17 +354,12 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
     setShowOnHoldModal(false);
     setShowOnProcessModal(false);
     setShowDoneModal(false);
-    // Reset states
+    setModalType("");
+    // Reset photo states when closing modal
     setSelectedPhoto(null);
     setPhotoPreview(null);
-    setTempKeterangan("");
-  };
-
-  // Handle modal dengan keterangan
-  const handleModalWithKeterangan = (statusType) => {
-    setModalType(statusType);
-    setTempKeterangan(""); // Reset temporary keterangan
-    setShowModal(true);
+    setErrorMessage("");
+    setSuccessMessage("");
   };
 
   if (!data) return <div className="text-center mt-5">Loading...</div>;
@@ -315,6 +368,44 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
     <>
       <DetailNavbar />
       <Container className="mt-5">
+        {/* Email Notification Alert */}
+        {emailNotification.show && (
+          <Alert 
+            variant={emailNotification.variant} 
+            dismissible 
+            onClose={() => setEmailNotification(prev => ({ ...prev, show: false }))}
+            className="mb-4"
+          >
+            <div className="d-flex align-items-center">
+              <i className={`fas ${emailNotification.variant === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} me-2`}></i>
+              {emailNotification.message}
+            </div>
+          </Alert>
+        )}
+
+        {/* Error/Success Messages */}
+        {errorMessage && (
+          <Alert variant="danger" dismissible onClose={() => setErrorMessage("")}>
+            {errorMessage}
+          </Alert>
+        )}
+        
+        {successMessage && (
+          <Alert variant="success" dismissible onClose={() => setSuccessMessage("")}>
+            {successMessage}
+          </Alert>
+        )}
+
+        {/* Loading indicator for email sending */}
+        {sendingEmail && (
+          <Alert variant="info" className="mb-4">
+            <div className="d-flex align-items-center">
+              <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+              Mengirim email notifikasi...
+            </div>
+          </Alert>
+        )}
+
         <h3 className="fw-bold">Detail Pelapor Sumbang</h3>
         <p className="text-muted mb-4">
           Sarana Prasarana Untuk Masyarakat Batu Gampang
@@ -328,6 +419,19 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
             <Form.Group className="mb-3">
               <Form.Label>Alamat</Form.Label>
               <Form.Control value={data.alamat} disabled />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Email</Form.Label>
+              <Form.Control 
+                value={data.email || "Tidak tersedia"} 
+                disabled 
+                className={!data.email ? "text-muted" : ""}
+              />
+              {data.email && (
+                <Form.Text className="text-success">
+                  ✓ Email notifikasi akan dikirim ke alamat ini
+                </Form.Text>
+              )}
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Nomor Telpon</Form.Label>
@@ -416,37 +520,25 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
           </Col>
         </Row>
         
-        {/* FORM KETERANGAN - OPTIONAL UNTUK EDIT MANUAL */}
-        <Form.Group className="mb-3">
-          <Form.Label>Keterangan</Form.Label>
-          <Row className="align-items-end">
-            <Col>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                value={keterangan}
-                onChange={(e) => setKeterangan(e.target.value)}
-                placeholder="Tulis keterangan (opsional)"
-              />
-            </Col>
-            <Col xs="auto">
-              <Button
-                variant="success"
-                onClick={handleSaveKeterangan}
-                disabled={saving}
-                style={{ height: "38px" }}
-              >
-                {saving ? "Menyimpan..." : "Simpan"}
-              </Button>
-            </Col>
-          </Row>
-          {/* Display current saved keterangan */}
-          {data.keterangan && (
-            <div className="mt-2">
-              <small className="text-muted">Keterangan tersimpan: </small>
-              <span className="text-dark">{data.keterangan}</span>
-            </div>
-          )}
+        <Form.Group className="mb-3 d-flex align-items-end gap-2">
+          <div style={{ flex: 1 }}>
+            <Form.Label>Keterangan</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={2}
+              value={keterangan}
+              onChange={(e) => setKeterangan(e.target.value)}
+              placeholder={keterangan ? "" : "Tulis keterangan di sini..."}
+            />
+          </div>
+          <Button
+            variant="success"
+            onClick={handleSaveKeterangan}
+            disabled={saving}
+            style={{ height: "38px", marginBottom: "4px" }}
+          >
+            {saving ? "Menyimpan..." : "Simpan"}
+          </Button>
         </Form.Group>
 
         {/* TOMBOL AKSI */}
@@ -454,6 +546,7 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
           <Button
             style={{ backgroundColor: "#C0392B" }}
             onClick={() => setShowDeleteModal(true)}
+            disabled={sendingEmail || loading}
           >
             Hapus Data
           </Button>
@@ -462,21 +555,15 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
             <>
               <Button
                 style={{ backgroundColor: "#7F8C8D" }}
-                onClick={() => {
-                  setModalType("On Hold");
-                  setTempKeterangan("");
-                  setShowOnHoldModal(true);
-                }}
+                onClick={() => setShowOnHoldModal(true)}
+                disabled={sendingEmail || loading}
               >
                 On Hold
               </Button>
               <Button
                 style={{ backgroundColor: "#2980B9" }}
-                onClick={() => {
-                  setModalType("On Process");
-                  setTempKeterangan("");
-                  setShowOnProcessModal(true);
-                }}
+                onClick={() => setShowOnProcessModal(true)}
+                disabled={sendingEmail || loading}
               >
                 On Process
               </Button>
@@ -486,10 +573,8 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
           {data.status === "On Process" && (
             <Button
               style={{ backgroundColor: "#191987ff" }}
-              onClick={() => {
-                setTempKeterangan("");
-                setShowDoneModal(true);
-              }}
+              onClick={() => setShowDoneModal(true)}
+              disabled={sendingEmail || loading}
             >
               Done
             </Button>
@@ -498,11 +583,8 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
           {data.status === "On Hold" && (
             <Button
               style={{ backgroundColor: "#2980B9" }}
-              onClick={() => {
-                setModalType("On Process");
-                setTempKeterangan("");
-                setShowOnProcessModal(true);
-              }}
+              onClick={() => setShowOnProcessModal(true)}
+              disabled={sendingEmail || loading}
             >
               On Process
             </Button>
@@ -512,13 +594,21 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
             <>
               <Button
                 style={{ backgroundColor: "#E74C3C" }}
-                onClick={() => handleModalWithKeterangan("Rejected")}
+                onClick={() => {
+                  setModalType("Rejected");
+                  setShowModal(true);
+                }}
+                disabled={sendingEmail || loading}
               >
                 Rejected
               </Button>
               <Button
                 style={{ backgroundColor: "#27AE60" }}
-                onClick={() => handleModalWithKeterangan("Approved")}
+                onClick={() => {
+                  setModalType("Approved");
+                  setShowModal(true);
+                }}
+                disabled={sendingEmail || loading}
               >
                 Approved
               </Button>
@@ -527,36 +617,29 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
         </div>
       </Container>
 
-      {/* Modal Approve/Reject dengan Keterangan */}
+      {/* Modal Approve/Reject */}
       <Modal show={showModal} onHide={handleClose} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Ubah Status ke {modalType}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>Apakah anda yakin ingin mengubah status menjadi <strong>{modalType}</strong>?</p>
-          
-          <Form.Group className="mb-3">
-            <Form.Label>Keterangan (Opsional)</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={tempKeterangan}
-              onChange={(e) => setTempKeterangan(e.target.value)}
-              placeholder="Tambahkan Keterangan (Opsional)"
-            />
-          </Form.Group>
-
-          <div className="d-flex justify-content-end gap-2">
-            <Button variant="secondary" onClick={handleClose}>
-              Batal
-            </Button>
-            <Button
-              style={{ backgroundColor: "#27AE60", color: "#fff" }}
-              onClick={() => handleUpdateStatusWithKeterangan(modalType, tempKeterangan)}
-            >
-              {modalType}
-            </Button>
-          </div>
+        <Modal.Body className="text-center">
+          <p>
+            Apakah anda yakin ingin mengubah status menjadi{" "}
+            <strong>{modalType}</strong>?
+          </p>
+          {data.email && (
+            <p className="text-muted small">
+              <i className="fas fa-envelope me-1"></i>
+              Email notifikasi akan dikirim ke: {data.email}
+            </p>
+          )}
+          <Button variant="secondary" onClick={handleClose} className="me-2">
+            Batal
+          </Button>
+          <Button
+            style={{ backgroundColor: "#27AE60", color: "#fff" }}
+            onClick={() => handleUpdateStatus(modalType)}
+            disabled={sendingEmail || loading}
+          >
+            {sendingEmail || loading ? "Memproses..." : "OK"}
+          </Button>
         </Modal.Body>
       </Modal>
 
@@ -576,84 +659,97 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
         </Modal.Body>
       </Modal>
 
-      {/* Modal On Hold dengan Keterangan */}
+      {/* Modal On Hold */}
       <Modal show={showOnHoldModal} onHide={handleClose} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Ubah Status ke On Hold</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>Apakah anda yakin ingin menandai laporan ini sebagai <strong>On Hold</strong>?</p>
-          
-          <Form.Group className="mb-3">
-            <Form.Label>Keterangan (Opsional)</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={tempKeterangan}
-              onChange={(e) => setTempKeterangan(e.target.value)}
-    
-            />
-          </Form.Group>
-
-          <div className="d-flex justify-content-end gap-2">
-            <Button variant="secondary" onClick={handleClose}>
-              Batal
-            </Button>
-            <Button
-              style={{ backgroundColor: "#27AE60", color: "#fff" }}
-              onClick={() => handleUpdateStatusWithKeterangan("On Hold", tempKeterangan)}
-            >
-              On Hold
-            </Button>
-          </div>
+        <Modal.Body className="text-center">
+          <p>
+            Apakah anda yakin ingin menandai laporan ini sebagai{" "}
+            <strong>On Hold</strong>?
+          </p>
+          {data.email && (
+            <p className="text-muted small">
+              <i className="fas fa-envelope me-1"></i>
+              Email notifikasi akan dikirim ke: {data.email}
+            </p>
+          )}
+          <Button variant="secondary" onClick={handleClose} className="me-2">
+            Batal
+          </Button>
+          <Button
+            style={{ backgroundColor: "#27AE60", color: "#fff" }}
+            onClick={() => handleQuickStatusUpdate("On Hold")}
+            disabled={sendingEmail || loading}
+          >
+            {sendingEmail || loading ? "Memproses..." : "OK"}
+          </Button>
         </Modal.Body>
       </Modal>
 
-      {/* Modal On Process dengan Keterangan */}
+      {/* Modal On Process */}
       <Modal show={showOnProcessModal} onHide={handleClose} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Ubah Status ke On Process</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>Apakah anda yakin ingin menandai laporan ini sebagai <strong>On Process</strong>?</p>
-          
-          <Form.Group className="mb-3">
-            <Form.Label>Keterangan (Opsional)</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={tempKeterangan}
-              onChange={(e) => setTempKeterangan(e.target.value)}
-              
-            />
-          </Form.Group>
-
-          <div className="d-flex justify-content-end gap-2">
-            <Button variant="secondary" onClick={handleClose}>
-              Batal
-            </Button>
-            <Button
-              style={{ backgroundColor: "#27AE60", color: "#fff" }}
-              onClick={() => handleUpdateStatusWithKeterangan("On Process", tempKeterangan)}
-            >
-              On Process
-            </Button>
-          </div>
+        <Modal.Body className="text-center">
+          <p>
+            Apakah anda yakin ingin menandai laporan ini sebagai{" "}
+            <strong>On Process</strong>?
+          </p>
+          {data.email && (
+            <p className="text-muted small">
+              <i className="fas fa-envelope me-1"></i>
+              Email notifikasi akan dikirim ke: {data.email}
+            </p>
+          )}
+          <Button variant="secondary" onClick={handleClose} className="me-2">
+            Batal
+          </Button>
+          <Button
+            style={{ backgroundColor: "#27AE60", color: "#fff" }}
+            onClick={() => handleQuickStatusUpdate("On Process")}
+            disabled={sendingEmail || loading}
+          >
+            {sendingEmail || loading ? "Memproses..." : "OK"}
+          </Button>
         </Modal.Body>
       </Modal>
 
-      {/* Modal Done dengan Keterangan dan Photo Upload */}
+      {/* Modal Done with Photo Upload - UPDATED */}
       <Modal show={showDoneModal} onHide={handleClose} centered>
         <Modal.Header closeButton>
           <Modal.Title>Upload Foto Penyelesaian</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p className="mb-3">
-            Silakan upload foto sebagai bukti penyelesaian sebelum menandai laporan sebagai <strong>Done</strong>.
+            Silakan upload foto sebagai bukti penyelesaian sebelum menandai laporan sebagai{" "}
+            <strong>Done</strong>.
           </p>
           
+          {data.email ? (
+            <Alert variant="info" className="mb-3">
+              <div className="d-flex align-items-start">
+                <i className="fas fa-envelope me-2 mt-1"></i>
+                <div>
+                  <strong>Email notifikasi akan dikirim ke:</strong><br/>
+                  {data.email}
+                  <div className="mt-2">
+                    <small className="text-muted">
+                      <i className="fas fa-paperclip me-1"></i>
+                      Foto penyelesaian akan dilampirkan sebagai attachment dalam email
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </Alert>
+          ) : (
+            <Alert variant="warning" className="mb-3">
+              <i className="fas fa-exclamation-triangle me-2"></i>
+              Email tidak tersedia untuk user ini
+            </Alert>
+          )}
+          
           <Form.Group className="mb-3">
-            <Form.Label>Pilih Foto</Form.Label>
+            <Form.Label>
+              Pilih Foto 
+              <small className="text-muted ms-2">(Maksimal 10MB, format: JPG, PNG, GIF)</small>
+            </Form.Label>
             <Form.Control
               type="file"
               accept="image/*"
@@ -661,27 +757,22 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
             />
           </Form.Group>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Keterangan Penyelesaian (Opsional)</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={tempKeterangan}
-              onChange={(e) => setTempKeterangan(e.target.value)}
-             
-            />
-          </Form.Group>
-
           {photoPreview && (
             <div className="mb-3">
               <Form.Label>Preview Foto:</Form.Label>
-              <div>
+              <div className="border rounded p-2">
                 <img
                   src={photoPreview}
                   alt="Preview"
                   className="img-fluid"
                   style={{ maxHeight: "200px", objectFit: "contain" }}
                 />
+                <div className="mt-2">
+                  <small className="text-muted">
+                    <i className="fas fa-info-circle me-1"></i>
+                    Foto ini akan dikirim sebagai attachment dalam email notifikasi
+                  </small>
+                </div>
               </div>
             </div>
           )}
@@ -693,9 +784,24 @@ const handleUpdateStatusWithKeterangan = async (statusValue, keteranganValue = "
             <Button
               style={{ backgroundColor: "#27AE60", color: "#fff" }}
               onClick={handleDoneWithPhoto}
-              disabled={!selectedPhoto || uploadingPhoto}
+              disabled={!selectedPhoto || uploadingPhoto || sendingEmail}
             >
-              {uploadingPhoto ? "Mengupload..." : "Upload & Done"}
+              {uploadingPhoto ? (
+                <>
+                  <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                  Memproses...
+                </>
+              ) : sendingEmail ? (
+                <>
+                  <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                  Mengirim Email...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-upload me-2"></i>
+                  Upload & Done
+                </>
+              )}
             </Button>
           </div>
         </Modal.Body>
