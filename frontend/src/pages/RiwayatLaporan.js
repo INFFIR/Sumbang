@@ -88,22 +88,34 @@ const RiwayatLaporan = () => {
     }
   };
 
-  const getStatusColor = (stepKey) => {
-    const relatedStatuses = stepStatusMap[stepKey] || [];
-    const matchingStatus = history
-      .slice()
-      .reverse()
-      .find((r) => relatedStatuses.includes(r.status?.toLowerCase().replace(/ /g, "_")));
-    
-    // Jika step adalah verifikasi dan tidak ada matching status, return warna kuning default
-    if (stepKey === "verifikasi" && !matchingStatus) {
-      return "#ffc107"; // Warna kuning untuk verifikasi
+const getStatusColor = (stepKey) => {
+  const stepIndex = statusSteps.findIndex(s => s.key === stepKey);
+  const currentStepKey = mapStatusToStepKey(currentStatus); // dari fungsi sebelumnya
+  const currentIndex = statusSteps.findIndex(s => s.key === currentStepKey);
+
+  if (stepKey === "persetujuan" && currentStatus.toLowerCase() === "rejected") {
+    return "#dc3545"; // merah untuk ditolak
+  }
+
+  if (stepIndex < currentIndex) {
+  return statusSteps[stepIndex]?.color || "#1347f3ff";
+}
+
+  if (stepIndex === currentIndex) {
+    // Warna khusus per step jika aktif
+    switch (stepKey) {
+      case "verifikasi": return "#ffc107";
+      case "persetujuan": return "#28a745";
+      case "pengerjaan": return "#17a2b8";
+      case "selesai": return "#4669deff";
+      default: return "#6c757d";
     }
-    
-    if (!matchingStatus) return "#e9ecef";
-    const normalized = matchingStatus.status.toLowerCase().replace(/ /g, "_");
-    return statusColors[normalized] || "#28a745";
-  };
+  }
+
+  return "#e9ecef"; // step belum dicapai
+};
+
+
 
   const getStatusIndex = (status) => {
     const normalizedStatus = status.toLowerCase().replace(/\s+/g, "_");
@@ -139,20 +151,33 @@ const RiwayatLaporan = () => {
     }
     return false;
   };
+const mapStatusToStepKey = (status) => {
+  if (!status) return "verifikasi";
+  const s = status.toLowerCase().replace(/\s+/g, "_");
+  if (["verifikasi"].includes(s)) return "verifikasi";
+  if (["approved", "rejected"].includes(s)) return "persetujuan";
+  if (["on_process", "on_hold"].includes(s)) return "pengerjaan";
+  if (["done"].includes(s)) return "selesai";
+  return "verifikasi";
+};
 
   // Fungsi untuk mendapatkan ikon yang tepat untuk setiap step
-  const getStepIcon = (stepKey, stepIndex, currentStatusIndex) => {
-    const isCompleted = isStatusCompleted(stepIndex, currentStatusIndex);
-    const isRejected = isStatusRejected(stepKey);
+const getStepIcon = (stepKey) => {
+  const currentStepKey = mapStatusToStepKey(currentStatus);
 
-    if (isRejected) {
-      return <FaTimes color="white" size={24} />;
-    } else if (isCompleted) {
-      return <FaCheckCircle color="white" size={24} />;
-    } else {
-      return stepIndex + 1;
-    }
-  };
+  if (stepKey === "persetujuan" && currentStatus.toLowerCase() === "rejected") {
+    return <FaTimes color="white" size={24} />;
+  } 
+  if (stepKey === currentStepKey) {
+    return <FaCheckCircle color="white" size={24} />;
+  }
+  const stepIndex = statusSteps.findIndex(s => s.key === stepKey);
+  const currentIndex = statusSteps.findIndex(s => s.key === currentStepKey);
+  if (stepIndex < currentIndex) {
+    return <FaCheckCircle color="white" size={24} />; // step sebelumnya selesai
+  }
+  return stepIndex + 1; // step selanjutnya belum selesai, tampil angka
+};
 
   const getAksiIcon = (aksi) => {
     switch (aksi?.toUpperCase()) {
