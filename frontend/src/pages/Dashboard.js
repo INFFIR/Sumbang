@@ -100,12 +100,6 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    const query = searchQuery.toLowerCase();
-
-    const safeIncludes = (field, query) => {
-      return (field || "").toLowerCase().includes(query);
-    };
-
     let results = data;
 
     // Filter berdasarkan status
@@ -117,11 +111,12 @@ const Dashboard = () => {
 
     // Filter berdasarkan search query
     if (searchQuery) {
-      results = results.filter(item =>
-        safeIncludes(item.nama, query) ||
-        safeIncludes(item.permintaan, query) ||
-        safeIncludes(item.lokasi, query) ||
-        safeIncludes(formatDate(item.tanggal), query)
+      results = results.filter(
+        (item) =>
+          item.nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.permintaan?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.lokasi?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          formatDate(item.tanggal).toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 

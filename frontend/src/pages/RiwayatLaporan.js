@@ -12,7 +12,7 @@ const RiwayatLaporan = () => {
   const [detail, setDetail] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
 
   const statusSteps = [
@@ -22,12 +22,6 @@ const RiwayatLaporan = () => {
     { key: "selesai", label: "Selesai", color: "#4669deff" }
   ];
 
-  const stepStatusMap = {
-    verifikasi: ["verifikasi"],
-    persetujuan: ["approved", "rejected"],
-    pengerjaan: ["on_process", "on_hold"],
-    selesai: ["done"]
-  };
 
   const statusColors = {
     approved: "#2ecc71",
@@ -37,36 +31,6 @@ const RiwayatLaporan = () => {
     done: "#1347f3ff",
     verifikasi: "#ffc107"
   };
-
-  // Check authentication di awal
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
-    
-    console.log("=== AUTH CHECK ===");
-    console.log("Token:", !!token);
-    console.log("Role:", role);
-    console.log("==================");
-    
-    if (!token) {
-      console.error("❌ Tidak ada token, redirect ke login");
-      setError("Anda harus login terlebih dahulu");
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
-      return;
-    }
-    
-    // Optional: Check role jika diperlukan
-    if (role && !['Admin', 'User'].includes(role)) {
-      console.error("❌ Role tidak valid:", role);
-      setError("Role tidak valid");
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
-      return;
-    }
-  }, [navigate]);
 
   // Format tanggal
   const formatDate = (dateString) => {
@@ -137,13 +101,6 @@ const getStatusColor = (stepKey) => {
     return stepIndex <= currentStatusIndex;
   };
 
-  const isStatusActive = (stepIndex, currentStatusIndex) => {
-    if (currentStatus.toLowerCase() === "rejected") {
-      return false; // Tidak ada yang aktif jika rejected
-    }
-    return stepIndex === currentStatusIndex;
-  };
-
   // Fungsi untuk menentukan apakah step ini rejected
   const isStatusRejected = (stepKey) => {
     if (stepKey === "persetujuan" && currentStatus.toLowerCase() === "rejected") {
@@ -179,19 +136,6 @@ const getStepIcon = (stepKey) => {
   return stepIndex + 1; // step selanjutnya belum selesai, tampil angka
 };
 
-  const getAksiIcon = (aksi) => {
-    switch (aksi?.toUpperCase()) {
-      case "INSERT":
-        return <i className="fas fa-plus-circle text-success"></i>;
-      case "UPDATE":
-        return <i className="fas fa-edit text-primary"></i>;
-      case "DELETE":
-        return <i className="fas fa-trash-alt text-danger"></i>;
-      default:
-        return <i className="fas fa-info-circle text-info"></i>;
-    }
-  };
-
   // Function to convert base64 image to displayable URL
   const getImageUrl = (base64) => {
     return base64 ? `data:image/jpeg;base64,${base64}` : null;
@@ -200,30 +144,10 @@ const getStepIcon = (stepKey) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        
-        // Debug token
-        console.log("=== TOKEN DEBUG ===");
-        console.log("Token exists:", !!token);
-        console.log("Token preview:", token ? token.substring(0, 20) + "..." : "null");
-        console.log("LocalStorage keys:", Object.keys(localStorage));
-        console.log("==================");
-        
-        if (!token) {
-          console.error("❌ Token tidak ditemukan di localStorage");
-          throw new Error("Anda harus login terlebih dahulu untuk melihat halaman ini");
-        }
-
         // Fetch detail laporan
-        console.log("📡 Fetching detail from:", `${process.env.REACT_APP_API_URL}/api/detail/${id}`);
+        console.log("📡 Fetching detail from:", `${process.env.REACT_APP_API_URL}/api/detail-riwayat/${id}`);
         const detailResponse = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/detail/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            timeout: 10000, // 10 seconds timeout
-          }
+          `${process.env.REACT_APP_API_URL}/api/detail-riwayat/${id}`,
         );
         console.log("✅ Detail response:", detailResponse.data);
         setDetail(detailResponse.data);
@@ -233,32 +157,12 @@ const getStepIcon = (stepKey) => {
         console.log("📡 Fetching history from:", `${process.env.REACT_APP_API_URL}/api/history/${id}`);
         const historyResponse = await axios.get(
           `${process.env.REACT_APP_API_URL}/api/history/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            timeout: 10000, // 10 seconds timeout
-          }
         );
         console.log("✅ History response:", historyResponse.data);
         setHistory(historyResponse.data);
 
       } catch (error) {
         console.error("Error fetching data:", error);
-        
-        // Jika token tidak ada atau expired, redirect ke login
-        if (error.message?.includes("login") || error.message?.includes("Token")) {
-          setError("Sesi Anda telah berakhir. Silakan login kembali.");
-          setTimeout(() => {
-            navigate("/login");
-          }, 3000);
-        } else {
-          setError(
-            error.response?.data?.error || 
-            error.message || 
-            "Terjadi kesalahan saat mengambil data"
-          );
-        }
       } finally {
         setLoading(false);
       }
@@ -333,7 +237,6 @@ const getStepIcon = (stepKey) => {
               <Row className="justify-content-center">
                 {statusSteps.map((step, index) => {
                   const isCompleted = isStatusCompleted(index, currentStatusIndex);
-                  const isActive = isStatusActive(index, currentStatusIndex);
                   const isRejected = isStatusRejected(step.key);
 
                   return (
@@ -409,13 +312,19 @@ const getStepIcon = (stepKey) => {
                       <strong>Nama Lengkap:</strong>
                       <p className="mb-1 text-muted">{detail.nama}</p>
                     </div>
-                    <div className="mb-3">
-                      <strong>Alamat:</strong>
-                      <p className="mb-1 text-muted">{detail.alamat}</p>
-                    </div>
                    <div className="mb-3">
                       <strong>Lokasi:</strong>
                       <p className="mb-1 text-muted">{detail.lokasi}</p>
+                    </div>
+                                        <div className="mb-3">
+                      <strong>Status Saat Ini:</strong>
+                      <br />
+                      <span 
+                        className="badge text-white mt-1" 
+                        style={{ backgroundColor: statusColors[detail.status?.toLowerCase().replace(/\s+/g, "_")] || "#6c757d" }}
+                      >
+                        {detail.status}
+                      </span>
                     </div>
                   </Col>
                   <Col md={6}>
@@ -427,16 +336,7 @@ const getStepIcon = (stepKey) => {
                       <strong>Detail Permintaan:</strong>
                       <p className="mb-1 text-muted">{detail.detail_permintaan}</p>
                     </div>
-                    <div className="mb-3">
-                      <strong>Status Saat Ini:</strong>
-                      <br />
-                      <span 
-                        className="badge text-white mt-1" 
-                        style={{ backgroundColor: statusColors[detail.status?.toLowerCase().replace(/\s+/g, "_")] || "#6c757d" }}
-                      >
-                        {detail.status}
-                      </span>
-                    </div>
+
                   </Col>
                 </Row>
               </Card.Body>
@@ -453,8 +353,6 @@ const getStepIcon = (stepKey) => {
                 <Table className="table-hover">
                   <thead style={{ backgroundColor: "#f8f9fa" }}>
                     <tr>
-                      <th className="border-0 text-center" style={{ width: "60px" }}>ID</th>
-                      <th className="border-0 text-center" style={{ width: "80px" }}>Aksi</th>
                       <th className="border-0" style={{ width: "120px" }}>Status</th>
                       <th className="border-0" style={{ width: "180px" }}>Tanggal</th>
                       <th className="border-0" style={{ width: "140px" }}>Diubah Oleh</th>
@@ -465,20 +363,6 @@ const getStepIcon = (stepKey) => {
                     {history.length > 0 ? (
                       history.map((item, index) => (
                         <tr key={item.id} className={index === 0 ? "table-light" : ""}>
-                          <td className="text-center align-middle">
-                            <span 
-                              className="badge rounded-pill bg-light text-dark" 
-                              style={{ fontSize: "12px" }}
-                            >
-                              {item.id}
-                            </span>
-                          </td>
-                          <td className="text-center align-middle">
-                            <div className="d-flex align-items-center justify-content-center">
-                              {getAksiIcon(item.aksi)}
-                              <span className="ms-1 small">{item.aksi}</span>
-                            </div>
-                          </td>
                           <td className="align-middle">
                             {item.status && (
                               <span 

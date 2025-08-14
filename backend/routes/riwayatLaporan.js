@@ -1,9 +1,7 @@
 // riwayatLaporan.js
 const express = require("express");
 const router = express.Router();
-const pool = require("../src/db"); // sesuaikan
-const { authenticateToken } = require("../src/authMiddleware"); // <-- tambahkan ini
-
+const pool = require("../src/db"); 
 // Route ini akan diakses sebagai /api/laporan/:id/riwayat
 router.get("/laporan/:id/riwayat", async (req, res) => {
   const requestId = req.params.id;
@@ -49,7 +47,7 @@ router.get("/laporan/:id", async (req, res) => {
 });
 
 // GET History untuk frontend - dengan authenticateToken
-router.get("/history/:id", authenticateToken, async (req, res) => {
+router.get("/history/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -68,5 +66,40 @@ router.get("/history/:id", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+router.get("/detail-riwayat/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT rd.nama, rd.permintaan, 
+              rd.detail_permintaan, rd.lokasi, rd.status, rd.keterangan, rd.foto_selesai FROM request_data rd
+       WHERE rd.id = ? AND rd.status != 'Deleted'`,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Request not found or has been deleted" });
+    }
+
+    const requestData = rows[0];
+    const fotoSelesaiBase64 = requestData.foto_selesai ? requestData.foto_selesai.toString("base64") : null;
+
+    res.json({
+      nama: requestData.nama,
+      permintaan: requestData.permintaan,
+      detail_permintaan: requestData.detail_permintaan,
+      lokasi: requestData.lokasi,
+      status: requestData.status,
+      keterangan: requestData.keterangan,
+      foto_selesai: fotoSelesaiBase64,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 
 module.exports = router;
