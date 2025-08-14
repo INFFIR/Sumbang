@@ -1,7 +1,8 @@
-//laporan.js 
+// riwayatLaporan.js
 const express = require("express");
 const router = express.Router();
 const pool = require("../src/db"); // sesuaikan
+const { authenticateToken } = require("../src/authMiddleware"); // <-- tambahkan ini
 
 // Route ini akan diakses sebagai /api/laporan/:id/riwayat
 router.get("/laporan/:id/riwayat", async (req, res) => {
@@ -18,6 +19,7 @@ router.get("/laporan/:id/riwayat", async (req, res) => {
     res.status(500).json({ error: "Gagal mengambil data riwayat" });
   }
 });
+
 // Tambahkan route ini di laporan.js
 router.get("/laporan/:id", async (req, res) => {
   const id = req.params.id;
@@ -34,7 +36,7 @@ router.get("/laporan/:id", async (req, res) => {
 
     const data = rows[0];
 
-    //Konversi foto_selesai ke base64 jika ada
+    // Konversi foto_selesai ke base64 jika ada
     if (data.foto_selesai) {
       data.foto_selesai = data.foto_selesai.toString("base64");
     }
@@ -46,5 +48,25 @@ router.get("/laporan/:id", async (req, res) => {
   }
 });
 
+// GET History untuk frontend - dengan authenticateToken
+router.get("/history/:id", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT id, request_id, status, keterangan, updated_at, updated_by, aksi
+       FROM request_data_history 
+       WHERE request_id = ? 
+       ORDER BY updated_at DESC`,
+      [id]
+    );
+
+    console.log(`📊 History fetched for request ${id}: ${rows.length} records`);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching history:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 module.exports = router;
