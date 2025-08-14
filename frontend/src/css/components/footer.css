@@ -1,31 +1,32 @@
 /* Footer Styles */
 .custom-footer {
-  background-color: #2F5D9F; /* Warna abu-abu biru sesuai gambar */
+  background-color: #2F5D9F;
   min-height: 200px;
   display: flex;
-  align-items: center;
+  flex-direction: column; /* agar logo, kontak, dan teks bisa tersusun vertikal */
+  align-items: center;    /* center secara horizontal */
+  justify-content: center; /* center secara vertikal jika tinggi footer besar */
+  padding: 20px;
+  text-align: center;     /* agar semua teks center */
 }
-
 .footer-logo {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: column; /* kolom: logo-row di atas, h5 di bawah */
+  align-items: center;    /* center horizontal */
+  gap: 10px;              /* jarak antara logo-row dan h5 */
+  margin-bottom: 15px;
 }
 
-.logo-circle {
-  width: 40px;
-  height: 40px;
-  border: 2px solid white;
-  border-radius: 50%;
+.logo-row {
   display: flex;
+  flex-direction: row;    /* logo berdampingan */
   align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
+  justify-content: center; /* center horizontal */
+  gap: 15px;              /* jarak antar logo */
 }
 
-.logo-circle i {
-  color: white;
-  font-size: 20px;
+.footer-logo img {
+  display: block;
 }
 
 .footer-logo h5 {
@@ -33,7 +34,9 @@
   font-size: 16px;
   color: white;
   margin: 0;
+  text-align: center;
 }
+
 
 /* Social Media Icons */
 .social-media {

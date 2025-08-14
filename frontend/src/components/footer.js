@@ -2,6 +2,7 @@ import React from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import "../css/components/footer.css";
 import logo from "../images/Logo-dishub.png"; // impor logo
+import logo2 from "../images/Logo-pemkot-batu.png";
 
 const Footer = () => {
   return (
@@ -10,28 +11,24 @@ const Footer = () => {
         <Row className="justify-content-center">
           <Col md={8} className="text-center">
             <div className="footer-logo mb-4">
-              <img
-                          src={logo}
-                          alt="Logo Dishub"
-                          width="58"
-                          height="45"
-                          className="d-inline-block align-top"
-                        />
-              <h5 className="mt-2 mb-0">Dinas Perhubungan Kota Batu</h5>
+              <div className="logo-row">
+                <img src={logo2} alt="Logo Pemkot Batu" width="58" height="45" />
+                <img src={logo} alt="Logo Dishub" width="58" height="45" />
+              </div>
+              <h5 className="mb-0">Dinas Perhubungan Kota Batu</h5>
             </div>
-
             <div className="contact-info mb-4">
               <h6 className="mb-3">Hubungi Kami</h6>
               <div className="contact-details">
                 <p className="mb-2">
                   <span className="contact-label">Instagram:</span>
                   <a
-                    href="https://www.instagram.com/dishubkotabatu"
+                    href="https://www.instagram.com/sarpras_dishubkwb"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="contact-link"
                   >
-                    @dishubkotabatu
+                    @sarpras_dishubkwb
                   </a>
                   <span className="contact-separator">|</span>
                   <span className="contact-label">Email:</span>

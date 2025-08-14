@@ -7,6 +7,15 @@ import axios from "axios";
 const Signup = () => {
   const [validated, setValidated] = useState(false);
   const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: ""
+  });
+  const [validationErrors, setValidationErrors] = useState({
+    email: "",
+    password: ""
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,38 +23,94 @@ const Signup = () => {
     if (token) {
         navigate("/"); // jangan hapus token!
     }
-    }, [navigate]);
+  }, [navigate]);
 
+  // Validasi email dengan domain .com
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.com$/;
+    return emailRegex.test(email);
+  };
 
-  const handleSubmit = async (event) => {
-    const form = event.currentTarget;
-    if (form.checkValidity() === false) {
-      event.preventDefault();
-      event.stopPropagation();
-    } else {
-      event.preventDefault();
-      const username = form.username.value;
-      const email = form.email.value;
-      const password = form.password.value;
+  // Validasi password minimal 6 karakter dan ada angka
+  const validatePassword = (password) => {
+    const hasMinLength = password.length >= 6;
+    const hasNumber = /\d/.test(password);
+    return hasMinLength && hasNumber;
+  };
 
-      try {
-        const response = await axios.post(
-          `${process.env.REACT_APP_API_URL}/api/register`,
-          {
-            username,
-            email,
-            password,
-          }
-        );
-        const { token } = response.data;
-        localStorage.setItem("token", token);
-        navigate("/login");
-      } catch (error) {
-        setError(
-          error.response?.data?.error || "Silahkan signup terlebih dahulu"
-        );
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Real-time validation
+    let newValidationErrors = { ...validationErrors };
+
+    if (name === "email") {
+      if (value && !validateEmail(value)) {
+        newValidationErrors.email = "Email harus menggunakan domain .com (contoh: user@example.com)";
+      } else {
+        newValidationErrors.email = "";
       }
     }
+
+    if (name === "password") {
+      if (value && !validatePassword(value)) {
+        newValidationErrors.password = "Password minimal 6 karakter dan harus mengandung angka";
+      } else {
+        newValidationErrors.password = "";
+      }
+    }
+
+    setValidationErrors(newValidationErrors);
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    
+    // Validasi custom
+    const isEmailValid = validateEmail(formData.email);
+    const isPasswordValid = validatePassword(formData.password);
+    
+    let newValidationErrors = { ...validationErrors };
+    
+    if (!isEmailValid) {
+      newValidationErrors.email = "Email harus menggunakan domain .com (contoh: user@example.com)";
+    }
+    
+    if (!isPasswordValid) {
+      newValidationErrors.password = "Password minimal 6 karakter dan harus mengandung angka";
+    }
+    
+    setValidationErrors(newValidationErrors);
+
+    if (form.checkValidity() === false || !isEmailValid || !isPasswordValid) {
+      event.stopPropagation();
+      setValidated(true);
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/register`,
+        {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        }
+      );
+      const { token } = response.data;
+      localStorage.setItem("token", token);
+      navigate("/login");
+    } catch (error) {
+      setError(
+        error.response?.data?.error || "Silahkan signup terlebih dahulu"
+      );
+    }
+    
     setValidated(true);
   };
 
@@ -55,7 +120,7 @@ const Signup = () => {
       <Container className="mt-5">
         <Row className="justify-content-center">
           <Col md={4}>
-            <h2 className="text-center mb-4 fw-bold">Sign-Up Sumbang</h2>
+            <h2 className="text-center mb-4 fw-bold">Sign Up Sumbang</h2>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form noValidate validated={validated} onSubmit={handleSubmit}>
               <Form.Group controlId="formUsername">
@@ -65,6 +130,8 @@ const Signup = () => {
                   type="text"
                   placeholder="Enter username"
                   name="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
                 />
                 <Form.Control.Feedback type="invalid">
                   Username is required.
@@ -76,11 +143,14 @@ const Signup = () => {
                 <Form.Control
                   required
                   type="email"
-                  placeholder="Enter email"
+                  placeholder="Enter email (contoh: user@gmail.com)"
                   name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  isInvalid={validated && (validationErrors.email || !formData.email)}
                 />
                 <Form.Control.Feedback type="invalid">
-                  Email is required.
+                  {validationErrors.email || "Email is required."}
                 </Form.Control.Feedback>
               </Form.Group>
 
@@ -89,11 +159,14 @@ const Signup = () => {
                 <Form.Control
                   required
                   type="password"
-                  placeholder="Enter password"
+                  placeholder="Password harus minimal 6 karakter dan mengandung angka."
                   name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  isInvalid={validated && (validationErrors.password || !formData.password)}
                 />
                 <Form.Control.Feedback type="invalid">
-                  Password is required.
+                  {validationErrors.password || "Password is required."}
                 </Form.Control.Feedback>
               </Form.Group>
 

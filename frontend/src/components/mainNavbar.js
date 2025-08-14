@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Navbar, Nav, Container, Dropdown } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../images/Logo-dishub.png";
+import logo2 from "../images/Logo-pemkot-batu.png";
 
 const MainNavbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -21,11 +22,11 @@ const MainNavbar = () => {
   return (
     <Navbar expand="lg" className="shadow-sm" style={{ backgroundColor: "#2F5D9F" }}>
       <Container>
-        <Navbar.Brand as={Link} to="/" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <Navbar.Brand as={Link} to="/" style={{ display: "flex", alignItems: "center", gap: "1px" }}>
+          <img src={logo2} alt="Logo Pemkot Batu" width="58" height="45" className="d-inline-block align-top" />
           <img src={logo} alt="Logo Dishub" width="58" height="45" className="d-inline-block align-top" />
           <span style={{ color: "white" }}>Dinas Perhubungan Kota Batu</span>
         </Navbar.Brand>
-
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto">
