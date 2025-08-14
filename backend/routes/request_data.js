@@ -49,22 +49,6 @@ router.get("/data", authenticateToken, async (req, res) => {
   }
 });
 
-
-// router.get("/user", authenticateToken, async (req, res) => {
-//   try {
-//     const userId = req.user.id;
-//     const [rows] = await pool.query("SELECT id FROM users WHERE id = ?", [userId]);
-//     if (rows.length > 0) {
-//       res.json(rows[0]);
-//     } else {
-//       res.status(404).json({ error: "User not found" });
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
 router.post(
   "/submit",
   authenticateToken,
@@ -141,8 +125,8 @@ router.post(
       console.log("Inserting data to database...");
       const insertQuery = `
         INSERT INTO request_data (
-          id_user, nama, alamat, no_whatsapp, no_hp, permintaan, detail_permintaan, lokasi, surat, foto, status, date, keterangan
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Verifikasi', ?, ?)
+          id_user, nama, alamat, no_whatsapp, no_hp, permintaan, detail_permintaan, lokasi, surat, foto, status, date, keterangan, updated_by_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Verifikasi', ?, ?,?)
       `;
       
       const insertValues = [
@@ -158,6 +142,7 @@ router.post(
         foto,
         date,
         keterangan.trim(),
+        userId,
       ];
 
       console.log("Insert values:", insertValues.map((val, index) => 
@@ -300,56 +285,5 @@ try {
     }
   }
 );
-
-router.put("/update-status/:id", authenticateToken, authorizeRole(['Admin']), async (req, res) => {
-  const { id } = req.params;
-  const { status, keterangan } = req.body;
-
-  try {
-    // Update status di database
-    await pool.query(
-      "UPDATE request_data SET status = ?, keterangan = ? WHERE id = ?",
-      [status, keterangan, id]
-    );
-
-    // Ambil data user untuk mengirim email
-    const [reportData] = await pool.query(`
-      SELECT rd.*, u.email, u.username 
-      FROM request_data rd 
-      JOIN users u ON rd.id_user = u.id 
-      WHERE rd.id = ?
-    `, [id]);
-
-    if (reportData.length > 0) {
-      const { email, username } = reportData[0];
-      
-      // Kirim email update status
-      await sendStatusUpdateMail(email, username, status, keterangan);
-    }
-
-    res.status(200).json({ message: "Status updated and email notification sent successfully" });
-  } catch (error) {
-    console.error("Error updating status:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// router.put("/update-keterangan/:id", authenticateToken, async (req, res) => {
-//   const { id } = req.params;
-//   const { keterangan } = req.body;
-
-//   try {
-//     await pool.query(
-//       "UPDATE request_data SET keterangan = ? WHERE id = ?",
-//       [keterangan, id]
-//     );
-//     res.status(200).json({ message: "Keterangan updated successfully" });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
-
 
 module.exports = router;

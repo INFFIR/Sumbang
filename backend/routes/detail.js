@@ -64,12 +64,13 @@ router.get("/detail/:id", authenticateToken, async (req, res) => {
 });
 
 // POST Update Status - UPDATED: With email notification
+// PUT Update Status - UPDATED: With updated_by_id to track the user who made the update
 router.put("/update-status/:id", authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { status, keterangan } = req.body;
+  const userId = req.user.id; // Assuming the user's ID is available in the token (authenticateToken middleware)
 
   try {
-    // Get laporan data with user email
     const [rows] = await pool.query(
       "SELECT rd.*, u.email, u.username FROM request_data rd JOIN users u ON rd.id_user = u.id WHERE rd.id = ?",
       [id]
@@ -81,10 +82,10 @@ router.put("/update-status/:id", authenticateToken, async (req, res) => {
 
     const laporan = rows[0];
 
-    // Update status di database
+    // Update status and updated_by_id in the database
     await pool.query(
-      "UPDATE request_data SET status = ?, keterangan = ? WHERE id = ?",
-      [status, keterangan || "", id]
+      "UPDATE request_data SET status = ?, keterangan = ?, updated_by_id = ? WHERE id = ?",
+      [status, keterangan || "", userId, id]  // Set updated_by_id to the current user's id
     );
 
     // Send email notification
@@ -111,6 +112,116 @@ router.put("/update-status/:id", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Terjadi kesalahan server" });
   }
 });
+// POST Update Keterangan - UPDATED: With updated_by_id to track the user who made the update
+router.post("/update-keterangan/:id", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { keterangan } = req.body;
+  const userId = req.user.id; // Assuming the user's ID is available in the token (authenticateToken middleware)
+  const timestamp = getTimestamp();
+
+  try {
+    const [result] = await pool.query(
+      "UPDATE request_data SET keterangan = ?, updated_by_id = ?, date = ? WHERE id = ?",
+      [keterangan, userId, timestamp, id]  // Set updated_by_id to the current user's id
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Data tidak ditemukan" });
+    }
+
+    res.status(200).json({ message: "Keterangan berhasil diperbarui" });
+  } catch (error) {
+    console.error("Error saat memperbarui keterangan:", error);
+    res.status(500).json({ error: "Terjadi kesalahan pada server" });
+  }
+});
+
+// POST Update Status with Photo Upload (specifically for Done status) - UPDATED
+// POST Update Status with Photo Upload (specifically for Done status) - UPDATED with email attachment
+// POST Update Status with Photo Upload (specifically for Done status) - UPDATED with updated_by_id
+router.post("/update-status-with-photo/:id", authenticateToken, upload.single("foto_selesai"), async (req, res) => {
+  const { id } = req.params;
+  const timestamp = getTimestamp();
+  const fotoSelesai = req.file ? req.file.buffer : null;
+  const userId = req.user.id; // User performing the update
+
+  if (!fotoSelesai) {
+    return res.status(400).json({ error: "Foto penyelesaian harus diupload" });
+  }
+
+  try {
+    const [userData] = await pool.query(
+      "SELECT rd.*, u.email, u.username FROM request_data rd JOIN users u ON rd.id_user = u.id WHERE rd.id = ?",
+      [id]
+    );
+
+    if (userData.length === 0) {
+      return res.status(404).json({ error: "Data tidak ditemukan" });
+    }
+
+    const user = userData[0];
+
+    // Update status and photo with updated_by_id
+    const [result] = await pool.query(
+      "UPDATE request_data SET status = ?, foto_selesai = ?, date = ?, updated_by_id = ? WHERE id = ?",
+      ["Done", fotoSelesai, timestamp, userId, id]  // Set updated_by_id to the current user's id
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Data tidak ditemukan" });
+    }
+
+    // Send email notification for Done status with photo attachment
+    try {
+      if (user.email) {
+        const { sendDoneEmailWithPhoto } = require("./sendMailer");
+        
+        await sendDoneEmailWithPhoto(
+          user.email, 
+          user.username, 
+          "Done", 
+          "Laporan Anda telah selesai ditangani. Terima kasih atas laporan Anda.",
+          req.file // Pass the photo file
+        );
+        
+        console.log(`Done email with photo sent to ${user.email}`);
+      }
+    } catch (emailError) {
+      console.error("Error sending Done email with photo:", emailError);
+    }
+
+    res.status(200).json({ 
+      message: "Status berhasil diubah menjadi Done, foto telah diupload, dan email notifikasi dengan foto terkirim" 
+    });
+  } catch (error) {
+    console.error("Error updating status with photo:", error);
+    res.status(500).json({ error: "Terjadi kesalahan pada server" });
+  }
+});
+
+// POST Soft Delete - UPDATED: With updated_by_id to track the user who made the delete
+router.post("/delete/:id", authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const timestamp = getTimestamp();
+  const userId = req.user.id; // User performing the delete
+
+  try {
+    const [result] = await pool.query(
+      "UPDATE request_data SET status = ?, date = ?, updated_by_id = ? WHERE id = ?",
+      ["Deleted", timestamp, userId, id]  // Set updated_by_id to the current user's id
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Data tidak ditemukan atau sudah dihapus" });
+    }
+
+    res.status(200).json({ message: "Data berhasil dihapus (soft delete)" });
+  } catch (error) {
+    console.error("Error saat soft delete:", error);
+    res.status(500).json({ error: "Terjadi kesalahan pada server" });
+  }
+});
+
 
 // NEW ROUTE: Send status email (for frontend calls)
 router.post("/send-status-email", authenticateToken, async (req, res) => {
@@ -139,114 +250,6 @@ router.post("/send-status-email", authenticateToken, async (req, res) => {
       message: "Gagal mengirim email notifikasi", 
       error: error.message 
     });
-  }
-});
-
-// POST Update Status with Photo Upload (specifically for Done status) - UPDATED
-// POST Update Status with Photo Upload (specifically for Done status) - UPDATED with email attachment
-router.post("/update-status-with-photo/:id", authenticateToken, upload.single("foto_selesai"), async (req, res) => {
-  const { id } = req.params;
-  const timestamp = getTimestamp();
-  const fotoSelesai = req.file ? req.file.buffer : null;
-
-  if (!fotoSelesai) {
-    return res.status(400).json({ error: "Foto penyelesaian harus diupload" });
-  }
-
-  try {
-    // Get user data for email
-    const [userData] = await pool.query(
-      "SELECT rd.*, u.email, u.username FROM request_data rd JOIN users u ON rd.id_user = u.id WHERE rd.id = ?",
-      [id]
-    );
-
-    if (userData.length === 0) {
-      return res.status(404).json({ error: "Data tidak ditemukan" });
-    }
-
-    const user = userData[0];
-
-    // Update status and photo
-    const [result] = await pool.query(
-      "UPDATE request_data SET status = ?, foto_selesai = ?, date = ? WHERE id = ?",
-      ["Done", fotoSelesai, timestamp, id]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Data tidak ditemukan" });
-    }
-
-    // Send email notification for Done status with photo attachment
-    try {
-      if (user.email) {
-        // Import the new function for sending email with photo
-        const { sendDoneEmailWithPhoto } = require("./sendMailer");
-        
-        await sendDoneEmailWithPhoto(
-          user.email, 
-          user.username, 
-          "Done", 
-          "Laporan Anda telah selesai ditangani. Terima kasih atas laporan Anda.",
-          req.file // Pass the photo file
-        );
-        
-        console.log(`Done email with photo sent to ${user.email}`);
-      }
-    } catch (emailError) {
-      console.error("Error sending Done email with photo:", emailError);
-    }
-
-    res.status(200).json({ 
-      message: "Status berhasil diubah menjadi Done, foto telah diupload, dan email notifikasi dengan foto terkirim" 
-    });
-  } catch (error) {
-    console.error("Error updating status with photo:", error);
-    res.status(500).json({ error: "Terjadi kesalahan pada server" });
-  }
-});
-
-// POST Soft Delete
-router.post("/delete/:id", authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  const timestamp = getTimestamp();
-
-  try {
-    const [result] = await pool.query(
-      "UPDATE request_data SET status = ?, date = ? WHERE id = ?",
-      ["Deleted", timestamp, id]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Data tidak ditemukan atau sudah dihapus" });
-    }
-
-    res.status(200).json({ message: "Data berhasil dihapus (soft delete)" });
-  } catch (error) {
-    console.error("Error saat soft delete:", error);
-    res.status(500).json({ error: "Terjadi kesalahan pada server" });
-  }
-});
-
-// POST Update Keterangan
-router.post("/update-keterangan/:id", authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  const { keterangan } = req.body;
-  const timestamp = getTimestamp();
-
-  try {
-    const [result] = await pool.query(
-      "UPDATE request_data SET keterangan = ?, date = ? WHERE id = ?",
-      [keterangan, timestamp, id]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Data tidak ditemukan" });
-    }
-
-    res.status(200).json({ message: "Keterangan berhasil diperbarui" });
-  } catch (error) {
-    console.error("Error saat memperbarui keterangan:", error);
-    res.status(500).json({ error: "Terjadi kesalahan pada server" });
   }
 });
 
