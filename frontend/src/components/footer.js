@@ -15,35 +15,33 @@ const Footer = () => {
                 <img src={logo2} alt="Logo Pemkot Batu" width="58" height="45" />
                 <img src={logo} alt="Logo Dishub" width="58" height="45" />
               </div>
-              <h5 className="mb-0">Dinas Perhubungan Kota Batu</h5>
+              <h4 className="mb-2" style={{ letterSpacing: '0.2em', fontWeight: 'bold' }}>
+                PEMERINTAH KOTA BATU
+              </h4>
+              <h4 className="mb-0" style={{ fontWeight: 'bold' }}>
+                DINAS PERHUBUNGAN
+              </h4>
             </div>
-            <div className="contact-info mb-4">
-              <h6 className="mb-3">Hubungi Kami</h6>
-              <div className="contact-details">
-                <p className="mb-2">
-                  <span className="contact-label">Instagram:</span>
-                  <a
-                    href="https://www.instagram.com/sarpras_dishubkwb"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="contact-link"
-                  >
-                    @sarpras_dishubkwb
-                  </a>
-                  <span className="contact-separator">|</span>
-                  <span className="contact-label">Email:</span>
-                  <a
-                    href="mailto:lalin.dishubkwb@gmail.com"
-                    className="contact-link"
-                  >
-                    lalin.dishubkwb@gmail.com
-                  </a>
-                </p>
-              </div>
+            
+            <div className="address-info mb-3">
+              <p className="mb-1">
+                Jalan Panglima Sudirman Nomor 507 Kota Batu Kode Pos 65313
+              </p>
+              <p className="mb-1">
+                Instagram : @sarpras_dishubkwb | E-mail : dishub@batukota.go.id
+              </p>
+              
             </div>
-
-            <div className="mission-statement">
-              <p className="mb-0">sarana prasarana untuk masyarakat batu gampang.</p>
+            
+            <div className="mission-statement mb-3">
+              <p className="mb-0" style={{ fontSize: '1rem', fontStyle: 'italic' }}>
+                sarana prasarana untuk masyarakat batu gampang.
+              </p>
+            </div>
+            <div className="copyright-year">
+              <p className="mb-0" style={{ fontSize: '0.9rem' }}>
+                © 2025
+              </p>
             </div>
           </Col>
         </Row>
