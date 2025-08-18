@@ -33,7 +33,7 @@ class DDoSProtection {
   calculateNetworkMetrics(req) {
     const clientIP = req.ip || req.connection.remoteAddress || '127.0.0.1';
     const now = Date.now();
-    const timeWindow = 10000; // 10 detik
+    const timeWindow =300000; // 30 menit
     
     // Initialize tracker untuk IP ini jika belum ada
     if (!this.requestTracker.has(clientIP)) {

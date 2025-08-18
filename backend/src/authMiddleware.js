@@ -1,73 +1,96 @@
 const jwt = require("jsonwebtoken");
+const winston = require("winston");
+const path = require("path"); // Impor modul path untuk path yang lebih andal
+
+// Konfigurasi Winston untuk menyimpan log ke file
+const logger = winston.createLogger({
+  // Gunakan level 'debug' untuk menangkap semua level log (debug, info, warn, error)
+  level: "debug",
+  format: winston.format.combine(
+    winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+    winston.format.printf(({ timestamp, level, message }) => {
+      return `[${timestamp}] ${level.toUpperCase()}: ${message}`;
+    })
+  ),
+  transports: [
+    // Menambahkan transport untuk file log
+    new winston.transports.File({
+      // Menggunakan path.join untuk memastikan path file benar di semua OS
+      filename: path.join(__dirname, "../logs/login.log"),
+      maxsize: 5 * 1024 * 1024, // 5MB
+      maxFiles: 5,
+      tailable: true,
+    }),
+  ],
+});
 
 const authenticateToken = (req, res, next) => {
-  console.log("=== AUTH MIDDLEWARE DEBUG ===");
-  
+  // 💡 Praktik Terbaik: Gunakan logger.debug untuk pesan debugging
+  logger.debug("=== AUTH MIDDLEWARE START ===");
+
   const authHeader = req.headers["authorization"];
-  console.log("Authorization header:", authHeader);
-  
   const token = authHeader && authHeader.split(" ")[1];
-  console.log("Extracted token:", token ? token.substring(0, 20) + "..." : "null");
-  
+  logger.debug(`Authorization header: ${authHeader}`);
+  logger.debug(
+    `Extracted token: ${token ? token.substring(0, 20) + "..." : "null"}`
+  );
+
   if (token == null) {
-    console.error("❌ No token provided");
-    return res.status(401).json({ 
+    logger.error("❌ No token provided");
+    return res.status(401).json({
       error: "Access token required",
-      debug: "No authorization header or token found"
+      debug: "No authorization header or token found",
     });
   }
 
-  // Check if JWT_SECRET exists
   if (!process.env.JWT_SECRET) {
-    console.error("❌ JWT_SECRET not found in environment variables");
-    return res.status(500).json({ 
+    logger.error("❌ JWT_SECRET not found in environment variables");
+    return res.status(500).json({
       error: "Server configuration error",
-      debug: "JWT_SECRET not configured"
+      debug: "JWT_SECRET not configured",
     });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
-      console.error("❌ Token verification error:", err.message);
-      
-      // More specific error messages
-      if (err.name === 'TokenExpiredError') {
-        return res.status(401).json({ 
-          error: "Token expired", 
-          debug: "JWT token has expired, please login again"
+      logger.error(`❌ Token verification error: ${err.message}`);
+
+      if (err.name === "TokenExpiredError") {
+        return res.status(401).json({
+          error: "Token expired",
+          debug: "JWT token has expired, please login again",
         });
-      } else if (err.name === 'JsonWebTokenError') {
-        return res.status(403).json({ 
-          error: "Invalid token", 
-          debug: "JWT token is malformed or invalid"
+      } else if (err.name === "JsonWebTokenError") {
+        return res.status(403).json({
+          error: "Invalid token",
+          debug: "JWT token is malformed or invalid",
         });
-      } else if (err.name === 'NotBeforeError') {
-        return res.status(403).json({ 
-          error: "Token not active", 
-          debug: "JWT token is not active yet"
+      } else if (err.name === "NotBeforeError") {
+        return res.status(403).json({
+          error: "Token not active",
+          debug: "JWT token is not active yet",
         });
       } else {
-        return res.status(403).json({ 
-          error: "Token verification failed", 
-          debug: err.message 
+        return res.status(403).json({
+          error: "Token verification failed",
+          debug: err.message,
         });
       }
     }
 
-    console.log("✅ Token verified successfully");
-    console.log("User from token:", {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role
-    });
+    logger.info("✅ Token verified successfully");
+    logger.debug(`User from token: ${JSON.stringify({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+    })}`);
 
-    // Validate that user has required fields
     if (!user.id || !user.username || !user.email) {
-      console.error("❌ Token missing required user fields:", user);
-      return res.status(401).json({ 
+      logger.error(`❌ Token missing required user fields: ${JSON.stringify(user)}`);
+      return res.status(401).json({
         error: "Invalid authentication data",
-        debug: "Token is missing required user fields (id, username, email)"
+        debug: "Token is missing required user fields (id, username, email)",
       });
     }
 
@@ -78,37 +101,38 @@ const authenticateToken = (req, res, next) => {
 
 const authorizeRole = (requiredRoles) => {
   return (req, res, next) => {
-    console.log("=== ROLE AUTHORIZATION DEBUG ===");
-    
-    // Handle both array and single role
+    logger.debug("=== ROLE AUTHORIZATION START ===");
+
     const roles = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
-    console.log("Required roles:", roles);
-    console.log("User role:", req.user?.role);
-    
+    logger.debug(`Required roles: ${roles}`);
+    logger.debug(`User role: ${req.user?.role}`);
+
     if (!req.user) {
-      console.error("❌ No user in request");
-      return res.status(401).json({ 
+      logger.error("❌ No user in request");
+      return res.status(401).json({
         error: "User not authenticated",
-        debug: "No user found in request object"
+        debug: "No user found in request object",
       });
     }
 
     if (!req.user.role) {
-      console.error("❌ User has no role");
-      return res.status(403).json({ 
+      logger.error("❌ User has no role");
+      return res.status(403).json({
         error: "User role not defined",
-        debug: "User object doesn't contain role information"
+        debug: "User object doesn't contain role information",
       });
     }
 
     if (roles.includes(req.user.role)) {
-      console.log("✅ Role authorization passed");
+      logger.info("✅ Role authorization passed");
       next();
     } else {
-      console.error("❌ Role authorization failed");
-      return res.status(403).json({ 
+      logger.error("❌ Role authorization failed");
+      return res.status(403).json({
         error: "Insufficient permissions",
-        debug: `Required roles: ${roles.join(', ')}, User role: ${req.user.role}`
+        debug: `Required roles: ${roles.join(", ")}, User role: ${
+          req.user.role
+        }`,
       });
     }
   };

@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify
 import joblib
 import numpy as np
@@ -6,8 +5,8 @@ import pandas as pd
 import logging
 from datetime import datetime
 import traceback
+import sys
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -321,4 +320,11 @@ if __name__ == '__main__':
         print("  GET  /example    - Get example requests")
         print(f"\n🌐 Server running on http://localhost:5001")
         
-        app.run(host='0.0.0.0', port=5001, debug=True)
+        # Check OS and use the appropriate server
+        if sys.platform == "win32":
+            # For Windows, use Waitress
+            from waitress import serve
+            serve(app, host='0.0.0.0', port=5001)
+        else:
+            # For Linux/macOS, use Flask's built-in server (or you can use Gunicorn via command line)
+            app.run(host='0.0.0.0', port=5001, debug=True)

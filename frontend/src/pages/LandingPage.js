@@ -11,11 +11,35 @@ const LandingPage = () => {
   const cardRefs = useRef([]);
   const [cardHeight, setCardHeight] = useState(null);
 
-  // State for media preview modal
+  // Responsiveness: deteksi lebar layar untuk tweak khusus HP
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(max-width: 767.98px)").matches;
+  });
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767.98px)");
+    const handler = (e) => setIsMobile(e.matches);
+    try {
+      mq.addEventListener("change", handler);
+    } catch {
+      // Safari fallback
+      mq.addListener(handler);
+    }
+    return () => {
+      try {
+        mq.removeEventListener("change", handler);
+      } catch {
+        mq.removeListener(handler);
+      }
+    };
+  }, []);
+
+  // State untuk modal pratinjau media
   const [previewMedia, setPreviewMedia] = useState({ type: null, src: null });
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-  // Helper function to check if a URL is an image
+  // Helper cek URL image
   const isImageUrl = (url) => {
     return (
       typeof url === "string" &&
@@ -23,7 +47,7 @@ const LandingPage = () => {
     );
   };
 
-  // Helper function to check if a URL is a direct video link
+  // Helper cek URL video
   const isVideoUrl = (url) => {
     return (
       typeof url === "string" &&
@@ -31,7 +55,7 @@ const LandingPage = () => {
     );
   };
 
-  // Helper function to get YouTube embed URL
+  // Helper YouTube embed
   const getYoutubeEmbedUrl = (url) => {
     const regExp =
       /^.*(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|)([\w-]{11})(?:\S+)?$/;
@@ -44,13 +68,13 @@ const LandingPage = () => {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem("token"); // Consider if token is needed for public landing page
+      const token = localStorage.getItem("token");
       const [contentRes, serviceRes] = await Promise.all([
         axios.get(`${process.env.REACT_APP_API_URL}/api/manage/content`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}, // Only send token if it exists
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         }),
         axios.get(`${process.env.REACT_APP_API_URL}/api/manage/service`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}, // Only send token if it exists
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         }),
       ]);
       setContentList(contentRes.data);
@@ -64,17 +88,21 @@ const LandingPage = () => {
     fetchData();
   }, []);
 
+  // Equal height cards hanya untuk desktop (HP biarkan auto height)
   useLayoutEffect(() => {
+    if (isMobile) {
+      setCardHeight(null);
+      return;
+    }
     if (cardRefs.current.length > 0) {
-      const heights = cardRefs.current.map(ref => ref?.offsetHeight || 0);
+      const heights = cardRefs.current.map((ref) => ref?.offsetHeight || 0);
       const max = Math.max(...heights);
       setCardHeight(max);
     }
-  }, [serviceList]);
+  }, [serviceList, isMobile]);
 
   const handleLaporClick = () => {
     const token = localStorage.getItem("token");
-
     if (token) {
       navigate("/pelaporan");
     } else {
@@ -82,28 +110,25 @@ const LandingPage = () => {
     }
   };
 
-
-  // Function to handle media preview
+  // Handler preview media
   const handlePreview = (item) => {
     const youtubeEmbedUrl = item.url ? getYoutubeEmbedUrl(item.url) : null;
 
     if (item.media) {
-      // Check if item.media is a base64 string
       if (typeof item.media === "string") {
         if (item.media.startsWith("data:video")) {
           setPreviewMedia({ type: "video", src: item.media });
         } else if (item.media.startsWith("data:image")) {
           setPreviewMedia({ type: "image", src: item.media });
         } else {
-          // Fallback for base64 that might not have a full data URI prefix
-          if (item.media.startsWith("AAAA")) { // Common start for some base64 encoded video files
+          if (item.media.startsWith("AAAA")) {
             setPreviewMedia({ type: "video", src: `data:video/mp4;base64,${item.media}` });
-          } else { // Assume it's an image if not identified as video
+          } else {
             setPreviewMedia({ type: "image", src: `data:image/jpeg;base64,${item.media}` });
           }
         }
       } else {
-        setPreviewMedia({ type: "unknown", src: null }); // For non-string media types
+        setPreviewMedia({ type: "unknown", src: null });
       }
     } else if (youtubeEmbedUrl) {
       setPreviewMedia({ type: "youtube", src: youtubeEmbedUrl });
@@ -117,154 +142,194 @@ const LandingPage = () => {
     setShowPreviewModal(true);
   };
 
+  // Wrapper media responsif
+  const MediaWrapper = ({ children }) => (
+    <div className="hp-media-wrapper">
+      {children}
+    </div>
+  );
 
   const renderMedia = (content) => {
     const youtubeEmbedUrl = content.url ? getYoutubeEmbedUrl(content.url) : null;
 
     if (content.media) {
-      const isContentMediaVideoBase64 = typeof content.media === 'string' && (content.media.startsWith("data:video") || content.media.startsWith("AAAA"));
-      const isContentMediaImageBase64 = typeof content.media === 'string' && content.media.startsWith("data:image");
+      const isContentMediaVideoBase64 =
+        typeof content.media === "string" &&
+        (content.media.startsWith("data:video") || content.media.startsWith("AAAA"));
+      const isContentMediaImageBase64 =
+        typeof content.media === "string" && content.media.startsWith("data:image");
 
       if (isContentMediaVideoBase64) {
         return (
-          <video
-            width="100%"
-            controls
-            style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "cover", cursor: "pointer" }}
-            onClick={() => handlePreview(content)}
-          >
-            <source src={content.media.startsWith("AAAA") ? `data:video/mp4;base64,${content.media}` : content.media} type="video/mp4" />
-            Browser tidak mendukung video.
-          </video>
+          <MediaWrapper>
+            <video
+              width="100%"
+              controls
+              className="hp-media"
+              onClick={() => handlePreview(content)}
+            >
+              <source
+                src={content.media.startsWith("AAAA") ? `data:video/mp4;base64,${content.media}` : content.media}
+                type="video/mp4"
+              />
+              Browser tidak mendukung video.
+            </video>
+          </MediaWrapper>
         );
       } else if (isContentMediaImageBase64) {
         return (
-          <img
-            src={content.media}
-            alt="media"
-            style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "cover", cursor: "pointer" }}
-            onClick={() => handlePreview(content)}
-          />
+          <MediaWrapper>
+            <img
+              src={content.media}
+              alt="media"
+              className="hp-media"
+              onClick={() => handlePreview(content)}
+            />
+          </MediaWrapper>
         );
-      } else if (typeof content.media === 'string') { // Fallback assuming base64 image if no clear prefix
+      } else if (typeof content.media === "string") {
         return (
-          <img
-            src={`data:image/jpeg;base64,${content.media}`}
-            alt="media"
-            style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "cover", cursor: "pointer" }}
-            onClick={() => handlePreview(content)}
-          />
+          <MediaWrapper>
+            <img
+              src={`data:image/jpeg;base64,${content.media}`}
+              alt="media"
+              className="hp-media"
+              onClick={() => handlePreview(content)}
+            />
+          </MediaWrapper>
         );
       }
     } else if (youtubeEmbedUrl) {
       return (
-        <div
-          // Menyesuaikan lebar dengan kontainer, Mengatur tinggi menjadi 0 untuk mempertahankan rasio aspek, Rasio aspek 16:9 (360 / 640 = 0.5625 atau 56.25%)
-          style={{ paddingBottom: "56.25%", overflow: "hidden", cursor: "pointer", position: "relative"}}
-          onClick={() => handlePreview(content)}
-        >
-          <iframe
-            width="100%"
-            height="100%"
-            src={youtubeEmbedUrl}
-            title="YouTube video player thumbnail"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            style={{ position: 'absolute', top: 0, left: 0 }}
-          ></iframe>
-        </div>
+        <MediaWrapper>
+          <div
+            className="hp-embed"
+            onClick={() => handlePreview(content)}
+          >
+            <iframe
+              src={youtubeEmbedUrl}
+              title="YouTube video player thumbnail"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </MediaWrapper>
       );
     } else if (content.url && isVideoUrl(content.url)) {
       return (
-        <video
-          width="100%"
-          controls
-          style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "cover", cursor: "pointer" }}
-          onClick={() => handlePreview(content)}
-        >
-          <source src={content.url} type="video/mp4" />
-          Browser tidak mendukung video.
-        </video>
+        <MediaWrapper>
+          <video
+            width="100%"
+            controls
+            className="hp-media"
+            onClick={() => handlePreview(content)}
+          >
+            <source src={content.url} type="video/mp4" />
+            Browser tidak mendukung video.
+          </video>
+        </MediaWrapper>
       );
     } else if (content.url && isImageUrl(content.url)) {
       return (
-        <img
-          src={content.url}
-          alt="media"
-          style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "cover", cursor: "pointer" }}
-          onClick={() => handlePreview(content)}
-        />
+        <MediaWrapper>
+          <img
+            src={content.url}
+            alt="media"
+            className="hp-media"
+            onClick={() => handlePreview(content)}
+          />
+        </MediaWrapper>
       );
     }
-    return null; // No media to display
+    return null;
   };
 
   const renderContentCard = (content, index) => {
     const isFirst = index === 0;
     const isEven = index % 2 === 0;
     const bgColor = isEven ? "bg-light" : "bg-dark text-white";
-    const textAlign = isEven ? "text-start" : "text-end";
+    const textAlignDesktop = isEven ? "text-start" : "text-end";
     const mediaToRender = renderMedia(content);
 
+    // Di HP: urutan media > teks agar lebih natural
+    // Di desktop: tetap mengikuti pola kiri/kanan seperti sebelumnya
     return (
-      <section className={`${bgColor} py-5 border-top`} key={`content-${index}`}>
-  <Container>
-    <Row className="align-items-center justify-content-center">
-      {!mediaToRender ? (
-        <Col md={8} className="text-center">
-          <h3 className="fw-bold">{content.title}</h3>
-          <p className="mt-4">{content.description}</p>
-          {isFirst && (
-            <Button
-              style={{ backgroundColor: '#2F5D9F', borderColor: '#2F5D9F', color: 'black' }}
-              onClick={handleLaporClick}
-            >
-              Lapor Sekarang
-            </Button>
-          )}
-        </Col>
-      ) : isEven ? (
-        <>
-          <Col md={7} className={textAlign}>
-            <h3 className="fw-bold">{content.title}</h3>
-            <p className="mt-4">{content.description}</p>
-            {isFirst && (
-              <Button
-                style={{ backgroundColor: '#2F5D9F', borderColor: '#2F5D9F', color: 'white' }}
-                onClick={handleLaporClick}
-              >
-                Lapor Sekarang
-              </Button>
+      <section className={`${bgColor} py-4 py-md-5 border-top`} key={`content-${index}`}>
+        <Container className="px-3 px-md-0">
+          <Row className="align-items-center justify-content-center g-3 g-md-4">
+            {!mediaToRender ? (
+              <Col xs={12} md={8} className="text-center">
+                <h3 className="fw-bold mb-3">{content.title}</h3>
+                <p className="mt-2 mb-0">{content.description}</p>
+                {isFirst && (
+                  <div className="d-grid d-md-inline mt-3">
+                    <Button
+                      className="hp-btn-lapor"
+                      style={{ backgroundColor: "#2F5D9F", borderColor: "#2F5D9F", color: "white" }}
+                      onClick={handleLaporClick}
+                    >
+                      Lapor Sekarang
+                    </Button>
+                  </div>
+                )}
+              </Col>
+            ) : isEven ? (
+              <>
+                {/* Desktop: teks kiri, media kanan | HP: media dulu */}
+                <Col
+                  xs={12}
+                  md={7}
+                  className={`${textAlignDesktop} order-2 order-md-1`}
+                >
+                  <h3 className="fw-bold mb-3">{content.title}</h3>
+                  <p className="mt-2 mb-0">{content.description}</p>
+                  {isFirst && (
+                    <div className="d-grid d-md-inline mt-3">
+                      <Button
+                        className="hp-btn-lapor"
+                        style={{ backgroundColor: "#2F5D9F", borderColor: "#2F5D9F", color: "white" }}
+                        onClick={handleLaporClick}
+                      >
+                        Lapor Sekarang
+                      </Button>
+                    </div>
+                  )}
+                </Col>
+                <Col xs={12} md={5} className="text-center order-1 order-md-2">
+                  {mediaToRender}
+                </Col>
+              </>
+            ) : (
+              <>
+                {/* Desktop: media kiri, teks kanan | HP: media dulu */}
+                <Col xs={12} md={5} className="text-center order-1">
+                  {mediaToRender}
+                </Col>
+                <Col
+                  xs={12}
+                  md={7}
+                  className={`${textAlignDesktop} order-2`}
+                >
+                  <h3 className="fw-bold mb-3">{content.title}</h3>
+                  <p className="mt-2 mb-0">{content.description}</p>
+                  {isFirst && (
+                    <div className="d-grid d-md-inline mt-3">
+                      <Button
+                        className="hp-btn-lapor"
+                        style={{ backgroundColor: "#2F5D9F", borderColor: "#2F5D9F", color: "#fff" }}
+                        onClick={handleLaporClick}
+                      >
+                        Lapor Sekarang
+                      </Button>
+                    </div>
+                  )}
+                </Col>
+              </>
             )}
-          </Col>
-          <Col md={5} className="text-center">
-            {mediaToRender}
-          </Col>
-        </>
-      ) : (
-        <>
-          <Col md={5} className="text-center">
-            {mediaToRender}
-          </Col>
-          <Col md={7} className={textAlign}>
-            <h3 className="fw-bold">{content.title}</h3>
-            <p className="mt-4">{content.description}</p>
-            {isFirst && (
-              <Button
-                style={{ backgroundColor: '#2F5D9F', borderColor: '#2F5D9F', color: '#fff' }}
-                onClick={handleLaporClick}
-              >
-                Lapor Sekarang
-              </Button>
-            )}
-          </Col>
-        </>
-      )}
-    </Row>
-  </Container>
-</section>
-
+          </Row>
+        </Container>
+      </section>
     );
   };
 
@@ -323,54 +388,106 @@ const LandingPage = () => {
   }
 
   return (
-    <div>
-      <MainNavbar />
-      {sections}
+    <>
+      {/* CSS ringan khusus HP agar media & tombol tidak mepet */}
+      <style>{`
+        /* Wrapper media: padding kecil, radius, dan shadow di HP */
+        .hp-media-wrapper {
+          width: 100%;
+        }
+        .hp-media {
+          width: 100%;
+          height: auto;
+          display: block;
+          border-radius: 12px;
+        }
+        /* Iframe YT responsif (16:9) */
+        .hp-embed {
+          position: relative;
+          width: 100%;
+          padding-bottom: 56.25%;
+          border-radius: 12px;
+          overflow: hidden;
+        }
+        .hp-embed iframe {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+        }
 
-      {/* Preview Modal for LandingPage */}
-      <Modal show={showPreviewModal} onHide={() => setShowPreviewModal(false)} centered size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Pratinjau Media</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="text-center">
-          {previewMedia.type === "image" && previewMedia.src && (
-            <img
-              src={previewMedia.src}
-              alt="Pratinjau Gambar"
-              style={{ maxWidth: "100%", maxHeight: "80vh", objectFit: "contain" }}
-            />
-          )}
-          {previewMedia.type === "video" && previewMedia.src && (
-            <video
-              width="100%"
-              height="auto"
-              controls
-              autoPlay
-              style={{ maxWidth: "100%", maxHeight: "80vh", objectFit: "contain" }}
-            >
-              <source src={previewMedia.src} type="video/mp4" />
-              Browser tidak mendukung video.
-            </video>
-          )}
-          {previewMedia.type === "youtube" && previewMedia.src && (
-            <div className="embed-responsive embed-responsive-16by9" style={{ position: 'relative', width: '100%', paddingBottom: '56.25%' /* 16:9 Aspect Ratio */ }}>
-              <iframe
-                className="embed-responsive-item"
+        /* Spacing & batasan tinggi media */
+        @media (max-width: 767.98px) {
+          .hp-media-wrapper {
+            margin: 10px 0 8px 0; /* beri jarak atas-bawah agar tidak nempel tombol/teks */
+          }
+          .hp-media, .hp-embed iframe {
+            max-height: 240px; /* nyaman di HP */
+            object-fit: cover;
+          }
+          .hp-btn-lapor {
+            padding: 10px 14px;
+            border-radius: 10px;
+          }
+        }
+        @media (min-width: 768px) {
+          .hp-media, .hp-embed iframe {
+            max-height: 300px; /* desktop tetap seperti sebelumnya */
+            object-fit: cover;
+          }
+        }
+      `}</style>
+
+      <div>
+        <MainNavbar />
+        {sections}
+
+        {/* Preview Modal */}
+        <Modal show={showPreviewModal} onHide={() => setShowPreviewModal(false)} centered size="lg">
+          <Modal.Header closeButton>
+            <Modal.Title>Pratinjau Media</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="text-center">
+            {previewMedia.type === "image" && previewMedia.src && (
+              <img
                 src={previewMedia.src}
-                title="YouTube video player"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-              ></iframe>
-            </div>
-          )}
-          {previewMedia.type === "unknown" && (
-            <p>Tidak dapat menampilkan pratinjau media.</p>
-          )}
-        </Modal.Body>
-      </Modal>
-    </div>
+                alt="Pratinjau Gambar"
+                style={{ maxWidth: "100%", maxHeight: "80vh", objectFit: "contain", borderRadius: 12 }}
+              />
+            )}
+            {previewMedia.type === "video" && previewMedia.src && (
+              <video
+                width="100%"
+                height="auto"
+                controls
+                autoPlay
+                style={{ maxWidth: "100%", maxHeight: "80vh", objectFit: "contain", borderRadius: 12 }}
+              >
+                <source src={previewMedia.src} type="video/mp4" />
+                Browser tidak mendukung video.
+              </video>
+            )}
+            {previewMedia.type === "youtube" && previewMedia.src && (
+              <div
+                className="hp-embed"
+                style={{ maxWidth: "100%", margin: "0 auto" }}
+              >
+                <iframe
+                  src={previewMedia.src}
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            )}
+            {previewMedia.type === "unknown" && (
+              <p>Tidak dapat menampilkan pratinjau media.</p>
+            )}
+          </Modal.Body>
+        </Modal>
+      </div>
+    </>
   );
 };
 

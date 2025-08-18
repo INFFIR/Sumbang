@@ -116,6 +116,7 @@ cd backend
 
 # Install dependencies
 npm install
+npm install winston
 npm install nodemailer
 
 # Start the server
@@ -152,6 +153,7 @@ npm install axios
 python -m venv venv
 venv\Scripts\activate
 pip install flask scikit-learn pandas joblib
+pip install waitress
 pip install matplotlib
 pip install seaborn
 python train_ddos_model.py 
